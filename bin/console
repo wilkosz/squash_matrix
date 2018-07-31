@@ -9,6 +9,6 @@ require "squash_matrix"
 # (If you use this, don't forget to add pry to your Gemfile!)
 # require "pry"
 # Pry.start
-
+require "pry"
 require "irb"
 IRB.start(__FILE__)
