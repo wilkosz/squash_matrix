@@ -6,7 +6,7 @@ require_relative 'errors'
 
 module SquashMatrix
   class Client
-    def initialize(player="42547", email=nil, password="Joshua27SM", suppress_errors: false)
+    def initialize(player=nil, email=nil, password=nil, suppress_errors: false)
       if ![player || email, password].any? {|x| x.nil? || x.empty?}
         @authenticated = {
           valid: false,
