@@ -17,6 +17,7 @@ module SquashMatrix
           rating_adjustment: r.at_css('td[8]')&.content,
           rating: r.at_css('td[9]')&.content,
           opponent_rating: r.at_css('td[11]')&.content
+          opponent_name: r.at_css('td[10]//a')&.content
         }
         rtn[:date] = Date.parse(date) if date
         rtn[:opponent_id] = /\/Home\/Player\/(.*)/.match(opponent_id)[1] if opponent_id

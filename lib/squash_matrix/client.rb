@@ -1,13 +1,13 @@
 require 'net/http'
 require 'date'
-require 'pry'
+require 'timeout'
 require_relative 'constants'
 require_relative 'nokogiri-parser'
 require_relative 'errors'
 
 module SquashMatrix
   class Client
-    def initialize(player: nil, email: nil, password: nil, suppress_errors: false)
+    def initialize(player: nil, email: nil, password: nil, suppress_errors: false, timeout: 60)
       if ![player || email, password].any? {|x| x.nil? || x.empty?}
         @authenticated = {
           valid: false,
@@ -18,7 +18,8 @@ module SquashMatrix
           email: email,
           password: password
         }
-        @suppress_errors = suppress_errors if suppress_errors
+        @suppress_errors = suppress_errors
+        @timeout = timeout
         authenticate
       end
     end
@@ -37,21 +38,27 @@ module SquashMatrix
 
     def player_info(id=nil)
       return if id.nil? || id.empty?
-      uri = URI::HTTP.build({
-        host: SquashMatrix::Constants::SQUASH_MATRIX_URL,
-        path: SquashMatrix::Constants::PLAYER_PATH.gsub(':id', id),
-        query: SquashMatrix::Constants::PLAYER_RSULTS_QUERY
-        })
-      req = Net::HTTP::Get.new(uri)
-      set_headers(req)
-      res = Net::HTTP.start(uri.hostname, uri.port) {|http| http.request(req)}
-      case res
-      when Net::HTTPSuccess
-        SquashMatrix::NokogiriParser.player_info(res.body)
-      when Net::HTTPConflict
-        raise SquashMatrix::ForbiddenError.new(res.body)
-      else
-        raise SquashMatrix::UnknownError.new(res)
+      begin
+        Timeout.timeout(@timeout) do
+          uri = URI::HTTP.build({
+            host: SquashMatrix::Constants::SQUASH_MATRIX_URL,
+            path: SquashMatrix::Constants::PLAYER_PATH.gsub(':id', id),
+            query: SquashMatrix::Constants::PLAYER_RSULTS_QUERY
+            })
+          req = Net::HTTP::Get.new(uri)
+          set_headers(req)
+          res = Net::HTTP.start(uri.hostname, uri.port) {|http| http.request(req)}
+          case res
+          when Net::HTTPSuccess
+            return SquashMatrix::NokogiriParser.player_info(res.body)
+          when Net::HTTPConflict
+            raise SquashMatrix::ForbiddenError.new(res) unless @suppress_errors
+          else
+            raise SquashMatrix::UnknownError.new(res) unless @suppress_errors
+          end
+        end
+      rescue Timeout::Error => e
+        raise e unless @suppress_errors
       end
     end
 
@@ -76,9 +83,9 @@ module SquashMatrix
         @authenticated[:updated_at] = Time.now.utc
         @authenticated[:valid] = true
         @authenticated[:player] = /\/Home\/Player\/(.*)/.match(res.response['location'])[1] if @authenticated[:email] && res.response['location']
-      else
+      elsif !@suppress_errors
         error_string = SquashMatrix::NokogiriParser.log_on_error(res.body).join(', ')
-        raise SquashMatrix::AuthorizationError.new(error_string) unless @suppress_errors
+        raise SquashMatrix::AuthorizationError.new(error_string)
       end
     end
 
