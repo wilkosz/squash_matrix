@@ -1,12 +1,13 @@
 require 'net/http'
 require 'date'
+require 'pry'
 require_relative 'constants'
 require_relative 'nokogiri-parser'
 require_relative 'errors'
 
 module SquashMatrix
   class Client
-    def initialize(player=nil, email=nil, password=nil, suppress_errors: false)
+    def initialize(player: nil, email: nil, password: nil, suppress_errors: false)
       if ![player || email, password].any? {|x| x.nil? || x.empty?}
         @authenticated = {
           valid: false,
@@ -35,17 +36,23 @@ module SquashMatrix
     end
 
     def player_info(id=nil)
-      return if id.nil? || id.empty? || !@authenticated[:player]
+      return if id.nil? || id.empty?
       uri = URI::HTTP.build({
         host: SquashMatrix::Constants::SQUASH_MATRIX_URL,
-        path: SquashMatrix::Constants::PLAYER_PATH.gsub(':id', id || @authenticated[:player]),
+        path: SquashMatrix::Constants::PLAYER_PATH.gsub(':id', id),
         query: SquashMatrix::Constants::PLAYER_RSULTS_QUERY
         })
       req = Net::HTTP::Get.new(uri)
       set_headers(req)
       res = Net::HTTP.start(uri.hostname, uri.port) {|http| http.request(req)}
-      return unless res.is_a?(Net::HTTPSuccess) # TODO handle error
-      SquashMatrix::NokogiriParser.player_info(res.body)
+      case res
+      when Net::HTTPSuccess
+        SquashMatrix::NokogiriParser.player_info(res.body)
+      when Net::HTTPConflict
+        raise SquashMatrix::ForbiddenError.new(res.body)
+      else
+        raise SquashMatrix::UnknownError.new(res)
+      end
     end
 
     def club_info(id=nil)

@@ -1,5 +1,5 @@
 require 'nokogiri'
-require 'pry'
+
 module SquashMatrix
   class NokogiriParser
     def self.player_info(body)
