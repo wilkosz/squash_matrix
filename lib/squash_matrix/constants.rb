@@ -5,5 +5,10 @@ module SquashMatrix
     LOGIN_PATH = "/Account/LogOn"
     PLAYER_PATH = "/Home/PlayerResults/:id"
     PLAYER_RSULTS_QUERY = "max=0&X-Requested-With=XMLHttpRequest"
+    SET_COOKIE_HEADER = 'set-cookie'
+    LOCATION_HEADER = 'location'
+    X_WWW__FROM_URL_ENCODED = 'application/x-www-form-urlencoded'
+    CONTENT_TYPE_HEADER = 'Content-Type'
+    REFERER = "Home/Player/:player"
   end
 end

@@ -77,12 +77,12 @@ module SquashMatrix
         UserName: @authenticated[:player] || @authenticated[:email],
         Password: @authenticated[:password],
         RememberMe: false)
-      @authenticated[:cookie] = res.response['set-cookie']
+      @authenticated[:cookie] = res.response[SquashMatrix::Constants::SET_COOKIE_HEADER]
       if auth_token_from_cookie(@authenticated[:cookie])
         @authenticated[:authenticated_at] = Time.now.utc
         @authenticated[:updated_at] = Time.now.utc
         @authenticated[:valid] = true
-        @authenticated[:player] = /\/Home\/Player\/(.*)/.match(res.response['location'])[1] if @authenticated[:email] && res.response['location']
+        @authenticated[:player] = /\/Home\/Player\/(.*)/.match(res.response[SquashMatrix::Constants::LOCATION_HEADER])[1] if @authenticated[:email] && res.response[SquashMatrix::Constants::LOCATION_HEADER]
       elsif !@suppress_errors
         error_string = SquashMatrix::NokogiriParser.log_on_error(res.body).join(', ')
         raise SquashMatrix::AuthorizationError.new(error_string)
@@ -94,8 +94,8 @@ module SquashMatrix
       if @authenticated
         {
           Cookie: @authenticated[:cookie],
-          Referer: "Home/Player/#{@authenticated[:player]}",
-          'Content-Type'.to_sym => 'application/x-www-form-urlencoded'
+          Referer: SquashMatrix::Constants::REFERER.gsub(':player', @authenticated[:player]),
+          SquashMatrix::Constants::CONTENT_TYPE_HEADER.to_sym => SquashMatrix::Constants::X_WWW__FROM_URL_ENCODED
         }.each {|key, val| req[key] = val}
       end
     end
