@@ -16,7 +16,7 @@ module SquashMatrix
           points: r.at_css('td[7]')&.content,
           rating_adjustment: r.at_css('td[8]')&.content,
           rating: r.at_css('td[9]')&.content,
-          opponent_rating: r.at_css('td[11]')&.content
+          opponent_rating: r.at_css('td[11]')&.content,
           opponent_name: r.at_css('td[10]//a')&.content
         }
         rtn[:date] = Date.parse(date) if date
