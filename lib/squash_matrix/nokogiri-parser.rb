@@ -1,4 +1,5 @@
 require 'nokogiri'
+require_relative 'constants'
 
 module SquashMatrix
   class NokogiriParser
@@ -20,10 +21,42 @@ module SquashMatrix
           opponent_name: r.at_css('td[10]//a')&.content
         }
         rtn[:date] = Date.parse(date) if date
-        rtn[:opponent_id] = /\/Home\/Player\/(.*)/.match(opponent_id)[1] if opponent_id
-        rtn[:match_id] = /\/Home\/Match\/(.*)/.match(match_id)[1] if match_id
+        rtn[:opponent_id] = SquashMatrix::Constants::PLAYER_FROM_PATH_REGEX.match(opponent_id)[1] if opponent_id
+        rtn[:match_id] = SquashMatrix::Constants::MATCH_FROM_PATH_REGEX.match(match_id)[1] if match_id
         rtn.values.any?(&:nil?) ? nil : rtn
       end.compact
+    end
+
+    def self.club_info(body)
+      html = Nokogiri::HTML(body)
+      name = SquashMatrix::Constants::CLUB_FROM_TITLE_REGEX.match(html.css('title').text)[1]
+      players = html.xpath('//div[@id="Rankings"]//div[@class="columnmain"]//table[@class="alternaterows"]//tbody//tr')&.map do |r|
+        player_path = r.css('td[2]//a').attribute('href').value
+        rank = r.css('td[1]').text
+        rtn = {
+          name: r.css('td[2]').text,
+          rating: r.css('td[3]').text.to_f
+        }
+        rtn[:rank] = rank.to_i if rank
+        rtn[:id] = SquashMatrix::Constants::PLAYER_FROM_PATH_REGEX.match(player_path)[1] if player_path
+        rtn
+      end.compact
+      juniors = html.xpath('//div[@id="Rankings"]//div[@class="columnside"]//table[@class="alternaterows"]//tbody//tr')&.map do |r|
+        player_path = r.css('td[2]//a').attribute('href').value
+        rank = r.css('td[1]').text
+        rtn = {
+          name: r.css('td[2]').text,
+          rating: r.css('td[3]').text.to_f
+        }
+        rtn[:rank] = rank.to_i if rank
+        rtn[:id] = SquashMatrix::Constants::PLAYER_FROM_PATH_REGEX.match(player_path)[1] if player_path
+        rtn
+      end.compact
+      {
+        name: name,
+        players: players,
+        juniors: juniors
+      }
     end
 
     def self.log_on_error(body)
