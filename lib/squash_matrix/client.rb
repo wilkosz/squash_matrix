@@ -11,7 +11,7 @@ module SquashMatrix
   # If authentication credentials are provided squash matrix will allow
   # considerably more requests for an IP address and allow forbidden conent
   # to be requested.
-  
+
   class Client
 
     # Returns newly created Client for making club and player requests
@@ -20,7 +20,9 @@ module SquashMatrix
     # @return [Client]
 
     def initialize(player: nil, email: nil, password: nil, suppress_errors: false, timeout: 60)
-      if ![player || email, password].any? {|x| x.nil? || x.empty?}
+      @suppress_errors = suppress_errors
+      @timeout = timeout
+      if ![player || email, password].any?(&:nil?)
         @authenticated = {
           valid: false,
           authenticated_at: nil,
@@ -30,14 +32,12 @@ module SquashMatrix
           email: email,
           password: password
         }
-        @suppress_errors = suppress_errors
-        @timeout = timeout
         authenticate
       end
     end
 
     # Returns club information.
-    # @note If suppress_errors == false SquashMatrix Errors will be raised upon HttpNotFound, HttpConflict, etc...
+    # @note If suppress_errors == false SquashMatrix Errors will be raised upon HttpNotFound, HttpConflict, Timeout::Error, etc...
     # @param id [Numeric] club id found on squash matrix
     # @return [Hash] hash object containing club information
 
@@ -51,7 +51,7 @@ module SquashMatrix
     end
 
     # Returns player information.
-    # @note If suppress_errors == false SquashMatrix Errors will be raised upon HttpNotFound, HttpConflict, etc...
+    # @note If suppress_errors == false SquashMatrix Errors will be raised upon HttpNotFound, HttpConflict, Timeout::Error, etc...
     # @param id [Numeric] played id found on squash matrix
     # @return [Hash] hash object containing player information
 
