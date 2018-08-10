@@ -9,8 +9,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Joshua Wilkosz"]
   spec.email         = ["joshua@wilkosz.com.au"]
 
-  spec.summary       = %q{Squash Matrix Scrapper}
-  spec.description   = %q{Used for scrapping squash matrix information}
+  spec.summary       = %q{Client for squashmatrix.com http request/response}
+  spec.description   = %q{User for retrieving information on squashmatrix.com}
   spec.homepage      = "https://github.com/wilkosz/squash_matrix"
   spec.license       = "MIT"
 

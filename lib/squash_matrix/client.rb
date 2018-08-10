@@ -7,18 +7,17 @@ require_relative 'errors'
 
 module SquashMatrix
 
-  # SquashMatrix::Client for http interactions with squashmatrix.com website.
-  #   If authentication credentials are provided squash matrix will allow
-  #   considerable more requests for an IP address and allow forbidden conent
-  #   to be requested.
-
+  # Client for http interactions with squashmatrix.com website.
+  # If authentication credentials are provided squash matrix will allow
+  # considerably more requests for an IP address and allow forbidden conent
+  # to be requested.
+  
   class Client
 
-    # Returns newly created SquashMatrix::Client for making club and player
-    #   information requests
-    # @note will return SquashMatrix::AuthorizationError if specified credentials are incorrect and squash matrix authentication returns forbidden
-    # @param [Hash{:player=>Numeric,:email=>String,:suppress_errors=>TrueClass,:timeout=>Numeric}]
-    # @return [SquashMatrix::Client, SquashMatrix::AuthorizationError]
+    # Returns newly created Client for making club and player requests
+    # @note If suppress_errors == false SquashMatrix::Errors::AuthorizationError will be raised if specified credentials are incorrect and squash matrix authentication returns forbidden
+    # @param [Hash] opts the options to create client
+    # @return [Client]
 
     def initialize(player: nil, email: nil, password: nil, suppress_errors: false, timeout: 60)
       if ![player || email, password].any? {|x| x.nil? || x.empty?}
@@ -37,11 +36,10 @@ module SquashMatrix
       end
     end
 
-    # Returns information from the specified player id. Example:
-    #   !{event: "foo", division: "foo", round: "1", position: "1", games: "3-0", points: "33-10", rating_adjustment: "1.1", rating: "200", opponent_rating: "190", opponen_name: "foo", opponent_id: "123", match_id: "123", date: Time.now}
-    # @note If suppress_errors == true return type [Hash, nil] else SquashMatrix Errors will be raised upon HttpNotFound, HttpConflict, etc...
+    # Returns club information.
+    # @note If suppress_errors == false SquashMatrix Errors will be raised upon HttpNotFound, HttpConflict, etc...
     # @param id [Numeric] club id found on squash matrix
-    # @return [Hash, nil, SquashMatrix::ForbiddenError, SquashMatrix::UnknownError] hash object containing club information
+    # @return [Hash] hash object containing club information
 
     def club_info(id=nil)
       uri = URI::HTTP.build({
@@ -52,11 +50,10 @@ module SquashMatrix
       handle_http_request(uri, success_proc)
     end
 
-    # Returns information from the specified club id. Example:
-    #   !{name: "foo", players: [{rank: 1, name: "foo", id: 1, rating: 123.45}], juniors: [{rank: 1, name: "foo_junior", id: 1, rating: 123.45}]}
-    # @note If suppress_errors == true return type [Hash, nil] else SquashMatrix Errors will be raised upon HttpNotFound, HttpConflict, etc...
+    # Returns player information.
+    # @note If suppress_errors == false SquashMatrix Errors will be raised upon HttpNotFound, HttpConflict, etc...
     # @param id [Numeric] played id found on squash matrix
-    # @return [Hash, nil, SquashMatrix::ForbiddenError, SquashMatrix::UnknownError] hash object containing club information
+    # @return [Hash] hash object containing player information
 
     def player_info(id=nil)
       return if id.nil?
@@ -81,9 +78,9 @@ module SquashMatrix
           when Net::HTTPSuccess
             return success_proc.call(res)
           when Net::HTTPConflict
-            raise SquashMatrix::ForbiddenError.new(res) unless @suppress_errors
+            raise SquashMatrix::Errors::ForbiddenError.new(res) unless @suppress_errors
           else
-            raise SquashMatrix::UnknownError.new(res) unless @suppress_errors
+            raise SquashMatrix::Errors::UnknownError.new(res) unless @suppress_errors
           end
         end
       rescue Timeout::Error => e
@@ -109,7 +106,7 @@ module SquashMatrix
         @authenticated[:player] = SquashMatrix::Constants::PLAYER_FROM_PATH_REGEX.match(res.response[SquashMatrix::Constants::LOCATION_HEADER])[1] if @authenticated[:email] && res.response[SquashMatrix::Constants::LOCATION_HEADER]
       elsif !@suppress_errors
         error_string = SquashMatrix::NokogiriParser.log_on_error(res.body).join(', ')
-        raise SquashMatrix::AuthorizationError.new(error_string)
+        raise SquashMatrix::Errors::AuthorizationError.new(error_string)
       end
     end
 
