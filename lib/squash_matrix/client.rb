@@ -11,6 +11,7 @@ module SquashMatrix
   #   If authentication credentials are provided squash matrix will allow
   #   considerable more requests for an IP address and allow forbidden conent
   #   to be requested.
+
   class Client
 
     # Returns newly created SquashMatrix::Client for making club and player
