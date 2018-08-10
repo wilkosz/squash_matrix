@@ -7,11 +7,14 @@ require_relative 'errors'
 
 module SquashMatrix
 
-  # SquashMatrix::Client for http interactions with squashmatrix.com website
-
+  # SquashMatrix::Client for http interactions with squashmatrix.com website.
+  #   If authentication credentials are provided squash matrix will allow
+  #   considerable more requests for an IP address and allow forbidden conent
+  #   to be requested.
   class Client
 
-    # Returns newly created SquashMatrix::Client for making club and player information requests
+    # Returns newly created SquashMatrix::Client for making club and player
+    #   information requests
     # @note will return SquashMatrix::AuthorizationError if specified credentials are incorrect and squash matrix authentication returns forbidden
     # @param [Hash{:player=>Numeric,:email=>String,:suppress_errors=>TrueClass,:timeout=>Numeric}]
     # @return [SquashMatrix::Client, SquashMatrix::AuthorizationError]
