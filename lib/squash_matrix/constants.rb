@@ -10,6 +10,7 @@ module SquashMatrix
     SET_COOKIE_HEADER = 'set-cookie'
     LOCATION_HEADER = 'location'
     X_WWW__FROM_URL_ENCODED = 'application/x-www-form-urlencoded'
+    MULTIPART_FORM_DATA = 'multipart/form-data'
     CONTENT_TYPE_HEADER = 'Content-Type'
     REFERER = "Home/Player/:id"
 

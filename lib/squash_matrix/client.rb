@@ -1,6 +1,7 @@
 require 'net/http'
 require 'date'
 require 'timeout'
+require 'json'
 require_relative 'constants'
 require_relative 'nokogiri-parser'
 require_relative 'errors'
@@ -76,31 +77,39 @@ module SquashMatrix
       uri = URI::HTTP.build({
         host: SquashMatrix::Constants::SQUASH_MATRIX_URL,
         path: SquashMatrix::Constants::SEARCH_PATH})
+      headers = {
+        SquashMatrix::Constants::CONTENT_TYPE_HEADER.to_sym => SquashMatrix::Constants::MULTIPART_FORM_DATA
+      }
       query_params = {
         Criteria: query,
-        SquashOnly: squash_only,
-        RacquetballOnly: racquetball_only
-      }
+        SquashOnly: false,
+        RacquetballOnly: false}
       success_proc = lambda {|res| SquashMatrix::NokogiriParser.search_results(res.body)}
-      handle_http_request(uri, success_proc, {is_get_request: false, query_params: query_params})
+      handle_http_request(uri, success_proc,
+        {
+          is_get_request: false,
+          query_params: query_params,
+          headers: headers
+        })
     end
 
     private
 
-    def handle_http_request(uri, success_proc, is_get_request: true, query_params: nil)
+    def handle_http_request(uri, success_proc, is_get_request: true, query_params: nil, headers: nil)
       begin
         Timeout.timeout(@timeout) do
           if is_get_request
             req = Net::HTTP::Get.new(uri)
+            set_headers(req, headers: headers)
+            res = Net::HTTP.start(uri.hostname, uri.port) {|http| http.request(req)}
           else
             req = Net::HTTP::Post.new(uri)
-            req.set_form_data(query_params) if query_params
+            set_headers(req, headers: headers)
+            res = Net::HTTP.post_form(uri, query_params)
           end
-          set_headers(req)
-          res = Net::HTTP.start(uri.hostname, uri.port) {|http| http.request(req)}
           case res
           when Net::HTTPSuccess
-            return success_proc.call(res)
+            return success_proc && success_proc.call(res) || res
           when Net::HTTPConflict
             raise SquashMatrix::Errors::ForbiddenError.new(res) unless @suppress_errors
           else
@@ -117,11 +126,21 @@ module SquashMatrix
       uri = URI::HTTP.build({
         host: SquashMatrix::Constants::SQUASH_MATRIX_URL,
         path: SquashMatrix::Constants::LOGIN_PATH})
-      res = Net::HTTP.post_form(
-        uri,
+      headers = {
+        SquashMatrix::Constants::CONTENT_TYPE_HEADER.to_sym => SquashMatrix::Constants::X_WWW__FROM_URL_ENCODED
+      }
+      query_params = {
         UserName: @authenticated[:player] || @authenticated[:email],
         Password: @authenticated[:password],
-        RememberMe: false)
+        RememberMe: false
+      }
+      res = handle_http_request(uri, nil,
+        {
+          is_get_request: false,
+          query_params: query_params,
+          headers: headers
+        })
+      return unless res
       @authenticated[:cookie] = res.response[SquashMatrix::Constants::SET_COOKIE_HEADER]
       if auth_token_from_cookie(@authenticated[:cookie])
         @authenticated[:authenticated_at] = Time.now.utc
@@ -134,15 +153,15 @@ module SquashMatrix
       end
     end
 
-    def set_headers(req=nil)
+    def set_headers(req=nil, headers: nil)
       return unless req
-      if @authenticated
-        {
-          Cookie: @authenticated[:cookie],
-          Referer: SquashMatrix::Constants::REFERER.gsub(':id', @authenticated[:player]),
-          SquashMatrix::Constants::CONTENT_TYPE_HEADER.to_sym => SquashMatrix::Constants::X_WWW__FROM_URL_ENCODED
-        }.each {|key, val| req[key] = val}
-      end
+      headers_to_add = {}
+      headers_to_add.merge(headers) if headers
+      headers_to_add.merge({
+        Cookie: @authenticated[:cookie],
+        Referer: SquashMatrix::Constants::REFERER.gsub(':id', @authenticated[:player]),
+      }) if @authenticated
+      headers_to_add.each {|key, val| req[key] = val}
     end
 
     def auth_token_from_cookie(cookie=nil)
