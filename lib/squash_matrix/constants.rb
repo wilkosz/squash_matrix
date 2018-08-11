@@ -15,6 +15,6 @@ module SquashMatrix
     PLAYER_FROM_PATH_REGEX = /\/Home\/Player\/(.*)/
     MATCH_FROM_PATH_REGEX = /\/Home\/Match\/(.*)/
     CLUB_FROM_TITLE_REGEX = /Club - (.*)/
-    ASPXAUTH_TOKEN_FROM_COOKIE_REGEX = /.ASPXAUTH=(.*);/
+    ASPXAUTH_TOKEN_FROM_COOKIE_REGEX = /.ASPXAUTH=([a-zA-Z0-9]*);/
   end
 end
