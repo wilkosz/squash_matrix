@@ -5,6 +5,7 @@ module SquashMatrix
     LOGIN_PATH = "/Account/LogOn"
     PLAYER_PATH = "/Home/PlayerResults/:id"
     CLUB_PATH = "/Home/Club/:id"
+    SEARCH_PATH = "/Home/Search"
     PLAYER_RSULTS_QUERY = "max=0&X-Requested-With=XMLHttpRequest"
     SET_COOKIE_HEADER = 'set-cookie'
     LOCATION_HEADER = 'location'

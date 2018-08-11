@@ -59,6 +59,11 @@ module SquashMatrix
       }
     end
 
+    def self.search_results(body)
+      binding.pry
+      body
+    end
+
     def self.log_on_error(body)
       Nokogiri::HTML(body)&.xpath('//div[@class="validation-summary-errors"]//ul//li')&.map(&:content)
     end

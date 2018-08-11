@@ -66,12 +66,36 @@ module SquashMatrix
       handle_http_request(uri, success_proc)
     end
 
+    # Returns search results
+    # @note If suppress_errors == false SquashMatrix Errors will be raised upon HttpNotFound, HttpConflict, Timeout::Error, etc...
+    # @param query [String] search query
+    # @return [Hash] hash object containing search results
+
+    def search(query=nil, squash_only: false, racquetball_only: false)
+      return if query.nil? || query.empty?
+      uri = URI::HTTP.build({
+        host: SquashMatrix::Constants::SQUASH_MATRIX_URL,
+        path: SquashMatrix::Constants::SEARCH_PATH})
+      query_params = {
+        Criteria: query,
+        SquashOnly: squash_only,
+        RacquetballOnly: racquetball_only
+      }
+      success_proc = lambda {|res| SquashMatrix::NokogiriParser.search_results(res.body)}
+      handle_http_request(uri, success_proc, {is_get_request: false, query_params: query_params})
+    end
+
     private
 
-    def handle_http_request(uri, success_proc)
+    def handle_http_request(uri, success_proc, is_get_request: true, query_params: nil)
       begin
         Timeout.timeout(@timeout) do
-          req = Net::HTTP::Get.new(uri)
+          if is_get_request
+            req = Net::HTTP::Get.new(uri)
+          else
+            req = Net::HTTP::Post.new(uri)
+            req.set_form_data(query_params) if query_params
+          end
           set_headers(req)
           res = Net::HTTP.start(uri.hostname, uri.port) {|http| http.request(req)}
           case res
