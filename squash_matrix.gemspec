@@ -9,15 +9,15 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Joshua Wilkosz"]
   spec.email         = ["joshua@wilkosz.com.au"]
 
-  spec.summary       = %q{Client for squashmatrix.com http request/response}
-  spec.description   = %q{User for retrieving information on squashmatrix.com}
+  spec.summary       = %q{Client for retrieving information on squashmatrix.com}
+  spec.description   = %q{Client for retrieving information on squashmatrix.com}
   spec.homepage      = "https://github.com/wilkosz/squash_matrix"
   spec.license       = "MIT"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
   # to allow pushing to a single host or delete this section to allow pushing to any host.
   if spec.respond_to?(:metadata)
-    spec.metadata["allowed_push_host"] = 'http://mygemserver.com'
+    spec.metadata["allowed_push_host"] = 'https://rubygems.org'
   else
     raise "RubyGems 2.0 or newer is required to protect against " \
       "public gem pushes."
@@ -37,6 +37,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rspec", "~> 3.0"
   spec.add_development_dependency "pry", "~> 0.10.3"
 
-  spec.add_dependency "nokogiri", "~> 1.8.4"
+  spec.add_runtime_dependency 'nokogiri', '~> 1.8', '>= 1.8.4'
   spec.required_ruby_version = '>= 2.3.0'
 end
