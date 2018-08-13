@@ -60,12 +60,66 @@ module SquashMatrix
     end
 
     def self.search_results(body)
-      binding.pry
-      body
+      bc = Nokogiri::HTML.parse(body).at_xpath('//div[@id="bodycontent"]')&.children
+      return unless bc&.length
+      rtn = {}
+      bc&.each_with_index do |c, i|
+        if c.name == "h2"
+          case c.text
+          when "Players"
+            rtn[:players] = players_from_search(bc[i+2]) if bc[i+2].children.length
+          when "Teams"
+            rtn[:teams] = teams_from_search(bc[i+2]) if bc[i+2].children.length
+          when "Clubs"
+            rtn[:clubs] = clubs_from_search(bc[i+2]) if bc[i+2].children.length
+          end
+        end
+      end
+      rtn
     end
 
     def self.log_on_error(body)
       Nokogiri::HTML(body)&.xpath('//div[@class="validation-summary-errors"]//ul//li')&.map(&:content)
+    end
+
+    def self.players_from_search(node)
+      node.css('tbody').css('tr')&.map do |tr|
+        id = tr.css('td[1]//a')&.attribute('href')&.value
+        rating = tr.css('td[3]')&.text
+        rtn = {
+          name: tr.css('td[1]')&.text,
+          club_name: tr.css('td[2]')&.text
+        }
+        rtn[:id] = SquashMatrix::Constants::PLAYER_FROM_PATH_REGEX.match(id)[1].to_i if id && !id.empty?
+        rtn[:rating] = rating.to_f if rating
+        rtn
+      end
+    end
+
+    def self.teams_from_search(node)
+      node.css('tbody').css('tr')&.map do |tr|
+        id = tr.css('td[1]//a')&.attribute('href')&.value
+        rtn = {
+          name: tr.css('td[1]')&.text,
+          division_name: tr.css('td[2]')&.text,
+          event_name: tr.css('td[3]')&.text
+        }
+        rtn[:id] = SquashMatrix::Constants::TEAM_FROM_PATH_REGEX.match(id)[1].to_i if id
+        rtn
+      end
+    end
+
+    def self.clubs_from_search(node)
+      node.css('tbody').css('tr')&.map do |tr|
+        puts tr
+        id = tr.css('td[1]//a')&.attribute('href')&.value
+        rtn = {
+          name: tr.css('td[1]')&.text,
+          state: tr.css('td[2]')&.text
+        }
+        rtn[:id] = SquashMatrix::Constants::CLUB_FROM_PATH_REGEX.match(id)[1].to_i if id
+        rtn
+      end
     end
   end
 end

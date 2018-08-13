@@ -9,12 +9,20 @@ RSpec.describe SquashMatrix::Constants do
     expect(SquashMatrix::Constants::PLAYER_FROM_PATH_REGEX.match("/Home/Player/42546")[1]).to eq("42546")
   end
 
+  it "team id from team path" do
+    expect(SquashMatrix::Constants::TEAM_FROM_PATH_REGEX.match("/Home/Team/1")[1]).to eq("1")
+  end
+
   it "match from match path" do
     expect(SquashMatrix::Constants::MATCH_FROM_PATH_REGEX.match("/Home/Match/30")[1]).to eq("30")
   end
 
-  it "club from title tags <title></title>" do
+  it "club name from title tags <title></title>" do
     expect(SquashMatrix::Constants::CLUB_FROM_TITLE_REGEX.match("Club - Melbourne University")[1]).to eq("Melbourne University")
+  end
+
+  it "club id from path" do
+    expect(SquashMatrix::Constants::CLUB_FROM_PATH_REGEX.match("/Home/Club/336")[1]).to eq("336")
   end
 
   it "aspxauth token from cookie" do

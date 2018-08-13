@@ -1,7 +1,6 @@
 require 'net/http'
 require 'date'
 require 'timeout'
-require 'json'
 require_relative 'constants'
 require_relative 'nokogiri-parser'
 require_relative 'errors'
@@ -77,9 +76,6 @@ module SquashMatrix
       uri = URI::HTTP.build({
         host: SquashMatrix::Constants::SQUASH_MATRIX_URL,
         path: SquashMatrix::Constants::SEARCH_PATH})
-      headers = {
-        SquashMatrix::Constants::CONTENT_TYPE_HEADER.to_sym => SquashMatrix::Constants::MULTIPART_FORM_DATA
-      }
       query_params = {
         Criteria: query,
         SquashOnly: false,
@@ -88,8 +84,7 @@ module SquashMatrix
       handle_http_request(uri, success_proc,
         {
           is_get_request: false,
-          query_params: query_params,
-          headers: headers
+          query_params: query_params
         })
     end
 
@@ -103,8 +98,6 @@ module SquashMatrix
             set_headers(req, headers: headers)
             res = Net::HTTP.start(uri.hostname, uri.port) {|http| http.request(req)}
           else
-            req = Net::HTTP::Post.new(uri)
-            set_headers(req, headers: headers)
             res = Net::HTTP.post_form(uri, query_params)
           end
           case res
