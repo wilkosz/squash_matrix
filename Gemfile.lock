@@ -2,7 +2,7 @@ PATH
   remote: .
   specs:
     squash_matrix (0.1.0)
-      nokogiri (~> 1.8.4)
+      nokogiri (~> 1.8, >= 1.8.4)
 
 GEM
   remote: https://rubygems.org/
@@ -44,4 +44,4 @@ DEPENDENCIES
   squash_matrix!
 
 BUNDLED WITH
-   1.16.1
+   1.16.2

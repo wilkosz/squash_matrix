@@ -7,14 +7,14 @@ require_relative 'errors'
 
 module SquashMatrix
 
-  # Client for http interactions with squashmatrix.com website.
+  # Client for retrieving player and club information from squashmatrix.com.
   # If authentication credentials are provided squash matrix will allow
   # considerably more requests for an IP address and allow forbidden conent
   # to be requested.
 
   class Client
 
-    # Returns newly created Client for making club and player requests
+    # Returns newly created Client
     # @note If suppress_errors == false SquashMatrix::Errors::AuthorizationError will be raised if specified credentials are incorrect and squash matrix authentication returns forbidden
     # @param [Hash] opts the options to create client
     # @return [Client]
@@ -36,7 +36,7 @@ module SquashMatrix
       end
     end
 
-    # Returns club information.
+    # Returns club info.
     # @note If suppress_errors == false SquashMatrix Errors will be raised upon HttpNotFound, HttpConflict, Timeout::Error, etc...
     # @param id [Numeric] club id found on squash matrix
     # @return [Hash] hash object containing club information
@@ -50,7 +50,7 @@ module SquashMatrix
       handle_http_request(uri, success_proc)
     end
 
-    # Returns player information.
+    # Returns player info.
     # @note If suppress_errors == false SquashMatrix Errors will be raised upon HttpNotFound, HttpConflict, Timeout::Error, etc...
     # @param id [Numeric] played id found on squash matrix
     # @return [Hash] hash object containing player information
@@ -78,8 +78,8 @@ module SquashMatrix
         path: SquashMatrix::Constants::SEARCH_PATH})
       query_params = {
         Criteria: query,
-        SquashOnly: false,
-        RacquetballOnly: false}
+        SquashOnly: squash_only,
+        RacquetballOnly: racquetball_only}
       success_proc = lambda {|res| SquashMatrix::NokogiriParser.search_results(res.body)}
       handle_http_request(uri, success_proc,
         {
