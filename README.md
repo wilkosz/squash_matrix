@@ -22,25 +22,93 @@ Or install it yourself as:
 
 ## Usage
 
-The follow shows how to initialize a new client, and interact with a player, club, and query search.
-
 ```ruby
-client = SquashMatrix::Client.new
+client = SquashMatrix::Client.new # initialize client
 => SquashMatrix::Client
-client.player_info(42547) # joshua wilkosz player info
-=> [{:event=>"2017 Melbourne Autumn  State Open Pennant", :division=>"State 2", :round=>"7", :position=>"3", :games=>"2-3", :points=>"67-73", :rating_adjustment=>0.58, :rating=>250.2, :opponent_rating=>275.24, :opponent_name=>"David Crossley", :date=> Time, :opponent_id=>26809, :match_id=>1003302}]
-client.club_info(336) # melbourne uni club info
-=> {:name=>"Melbourne University Squash Club",
-  :players=>[{:name=>"David Clegg", :rating=>342.5, :rank=>0, :id=>"43076"}],
-  :juniors=>[{:name=>"Trevor Bryden", :rating=>95.28, :rank=>0, :id=>"72728"}]}
-client.search("joshua")
-=> {:players=>[{:name=>"Joshua Altmann", :club_name=>"Monash University", :id=>47508, :rating=>107.821}],
-  :teams=>[{:name=>"Joshua mallison", :division_name=>"Box 08", :event_name=>"2017 Briars @ Thornleigh Box Challenge (Season 29)", :id=>80792}],
-  :clubs=>[]}
-client.search("melbourne")
-=> {:players=>[{:name=>"Melbourne Simpson", :club_name=>"Mirrabooka", :id=>17797, :rating=>199.607}],
-  :teams=>[{:name=>"Melbourne Uni (2)@Fitz", :division_name=>"C Reserve", :event_name=>"2012 Melbourne Spring SSL Women's Pennant", :id=>39605}],
-  :clubs=>[{:name=>"Melbourne University", :state=>"Victoria", :id=>336}]}
+client.player_info(42547) # retrieve player info for joshua wilkosz #42547
+=> [
+  {
+    :event=>"2017 Melbourne Autumn  State Open Pennant",
+    :division=>"State 2",
+    :round=>"7",
+    :position=>"3",
+    :games=>"2-3",
+    :points=>"67-73",
+    :rating_adjustment=>0.58,
+    :rating=>250.2,
+    :opponent_rating=>275.24,
+    :opponent_name=>"David Crossley",
+    :date=> Time,
+    :opponent_id=>26809,
+    :match_id=>1003302
+  }
+]
+client.club_info(336) # retrieve club info for melbourne university #336
+=> {
+  :name=>"Melbourne University Squash Club",
+  :players=>[
+    {
+      :name=>"David Clegg",
+      :rating=>342.5,
+      :rank=>0,
+      :id=>"43076"
+    }
+  ],
+  :juniors=>[
+    {
+      :name=>"Trevor Bryden",
+      :rating=>95.28,
+      :rank=>0,
+      :id=>"72728"
+    }
+  ]
+}
+client.search("joshua") # search for 'joshua'
+=> {
+  :players=>[
+    {
+      :name=>"Joshua Altmann",
+      :club_name=>"Monash University",
+      :id=>47508,
+      :rating=>107.821
+    }
+  ],
+  :teams=>[
+    {
+      :name=>"Joshua mallison",
+      :division_name=>"Box 08",
+      :event_name=>"2017 Briars @ Thornleigh Box Challenge (Season 29)",
+      :id=>80792
+    }
+  ],
+  :clubs=>[]
+}
+client.search("melbourne") # search for 'melbourne'
+=> {
+  :players=>[
+    {
+      :name=>"Melbourne Simpson",
+      :club_name=>"Mirrabooka",
+      :id=>17797,
+      :rating=>199.607
+    }
+  ],
+  :teams=>[
+    {
+      :name=>"Melbourne Uni (2)@Fitz",
+      :division_name=>"C Reserve",
+      :event_name=>"2012 Melbourne Spring SSL Women's Pennant",
+      :id=>39605
+    }
+  ],
+  :clubs=>[
+    {
+      :name=>"Melbourne University",
+      :state=>"Victoria",
+      :id=>336
+    }
+  ]
+}
 ```
 
 ## Development
