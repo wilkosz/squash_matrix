@@ -114,7 +114,6 @@ module SquashMatrix
 
       def clubs_from_search(node)
         node.css('tbody//tr')&.map do |tr|
-          puts tr
           id = tr.css('td[1]//a')&.attribute('href')&.value
           rtn = {
             name: tr.css('td[1]')&.text,

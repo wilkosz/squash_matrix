@@ -1,6 +1,8 @@
 # SquashMatrix
 
-Client for retrieving player and club information from squashmatrix.com
+Ruby SDK for www.squashmatrix.com
+
+The generated client interacts with www.squashmatrix.com by retrieving player and club information and performing search requests.
 
 ## Installation
 
@@ -24,10 +26,21 @@ The follow shows how to initialize a new client, and interact with a player, clu
 
 ```ruby
 client = SquashMatrix::Client.new
+=> SquashMatrix::Client
 client.player_info(42547) # joshua wilkosz player info
+=> [{:event=>"2017 Melbourne Autumn  State Open Pennant", :division=>"State 2", :round=>"7", :position=>"3", :games=>"2-3", :points=>"67-73", :rating_adjustment=>0.58, :rating=>250.2, :opponent_rating=>275.24, :opponent_name=>"David Crossley", :date=> Time, :opponent_id=>26809, :match_id=>1003302}]
 client.club_info(336) # melbourne uni club info
+=> {:name=>"Melbourne University Squash Club",
+  :players=>[{:name=>"David Clegg", :rating=>342.5, :rank=>0, :id=>"43076"}],
+  :juniors=>[{:name=>"Trevor Bryden", :rating=>95.28, :rank=>0, :id=>"72728"}]}
 client.search("joshua")
+=> {:players=>[{:name=>"Joshua Altmann", :club_name=>"Monash University", :id=>47508, :rating=>107.821}],
+  :teams=>[{:name=>"Joshua mallison", :division_name=>"Box 08", :event_name=>"2017 Briars @ Thornleigh Box Challenge (Season 29)", :id=>80792}],
+  :clubs=>[]}
 client.search("melbourne")
+=> {:players=>[{:name=>"Melbourne Simpson", :club_name=>"Mirrabooka", :id=>17797, :rating=>199.607}],
+  :teams=>[{:name=>"Melbourne Uni (2)@Fitz", :division_name=>"C Reserve", :event_name=>"2012 Melbourne Spring SSL Women's Pennant", :id=>39605}],
+  :clubs=>[{:name=>"Melbourne University", :state=>"Victoria", :id=>336}]}
 ```
 
 ## Development
@@ -40,7 +53,7 @@ To run tests, run `bundle exec rspec`
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/squash_matrix. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+Bug reports and pull requests are welcome on GitHub at https://github.com/wilkosz/squash_matrix. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
 ## License
 
