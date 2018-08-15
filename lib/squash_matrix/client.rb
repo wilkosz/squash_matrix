@@ -101,28 +101,19 @@ module SquashMatrix
             set_headers(req)
             form_data = []
             query_params.each {|key, value| form_data.push([key.to_s, value.to_s])}
-            # puts form_data
             set_headers(req, headers: headers)
-            req.set_form(form_data, 'multipart/form-data')
-            # res = Net::HTTP.post_form(uri, query_params)
+            req.set_form(form_data, SquashMatrix::Constants::MULTIPART_FORM_DATA)
           end
           res = Net::HTTP.start(uri.hostname, uri.port, {use_ssl: uri.scheme == 'https'}) {|http| http.request(req)}
-          # puts uri
-          # puts req.each_header.to_h if req
-          # puts res.each_header.to_h
-          # puts res.body
-          binding.pry if /Request made too soon. This is to prevent abuse to the site. We apologise for the inconvenience/.match(res.body)
-          binding.pry if /Forbidden/.match(res.body)
           case res
           when Net::HTTPSuccess, Net::HTTPFound
             return success_proc && success_proc.call(res) || res
           when Net::HTTPConflict
-            binding.pry
-            # res.body == "Forbidden"
-            # find error? Request made too soon. This is to prevent abuse to the site. We apologise for the inconvenience.
-            raise SquashMatrix::Errors::ForbiddenError.new(res.body) unless @suppress_errors
+            unless @suppress_errors
+              raise SquashMatrix::Errors::ForbiddenError.new(res.body) if SquashMatrix::Constants::FORBIDDEN_ERROR_REGEX.match(res.body)
+              raise SquashMatrix::Errors::TooManyRequestsError.new(res.body) if SquashMatrix::Constants::TOO_MANY_REQUESTS_ERROR_REGEX.match(res.body)
+            end
           else
-            binding.pry
             raise SquashMatrix::Errors::UnknownError.new(res) unless @suppress_errors
           end
         end
@@ -169,8 +160,6 @@ module SquashMatrix
     def set_headers(req=nil, headers: nil)
       return unless req
       headers_to_add = {
-        # 'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-        # 'accept-encoding': 'gzip, deflate, br',
         SquashMatrix::Constants::USER_AGENT_HEADER => @user_agent,
         SquashMatrix::Constants::HOST_HEADER => SquashMatrix::Constants::SQUASH_MATRIX_URL}
       headers_to_add = headers_to_add.merge(headers) if headers

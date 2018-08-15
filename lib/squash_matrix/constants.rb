@@ -28,5 +28,8 @@ module SquashMatrix
 
     ERROR_RETRIEVING_ASPNET_SESSION = "Error retrieving ASP.NET_SessionId"
     ERROR_RETRIEVING_ASPAUX_TOKEN = "Error retrieving .ASPXAUTH_TOKEN"
+
+    TOO_MANY_REQUESTS_ERROR_REGEX = /Request made too soon. This is to prevent abuse to the site. We apologise for the inconvenience/
+    FORBIDDEN_ERROR_REGEX = /Forbidden/
   end
 end
