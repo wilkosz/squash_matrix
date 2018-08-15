@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["joshua@wilkosz.com.au"]
 
   spec.summary       = %q{Ruby SDK for www.squashmatrix.com}
-  spec.description   = %q{The generated client interacts with www.squashmatrix.com by retrieving player and club information and performing search requests}
+  spec.description   = %q{Ruby SDK for www.squashmatrix.com}
   spec.homepage      = "https://github.com/wilkosz/squash_matrix"
   spec.license       = "MIT"
 
