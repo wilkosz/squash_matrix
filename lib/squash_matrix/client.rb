@@ -2,6 +2,7 @@ require 'net/http'
 require 'date'
 require 'timeout'
 require 'http-cookie'
+require 'user_agent_randomizer'
 require_relative 'constants'
 require_relative 'nokogiri-parser'
 require_relative 'errors'
@@ -21,7 +22,8 @@ module SquashMatrix
     # @return [Client]
 
     def initialize(player: nil, email: nil, password: nil, suppress_errors: false, timeout: 60)
-      @squash_matrix_home_uri = URI::HTTP.build({ host: SquashMatrix::Constants::SQUASH_MATRIX_URL, path: '/'})
+      @user_agent =  UserAgentRandomizer::UserAgent.fetch(type: "desktop_browser").string
+      @squash_matrix_home_uri = URI::HTTP.build({ host: SquashMatrix::Constants::SQUASH_MATRIX_URL })
       @suppress_errors = suppress_errors
       @timeout = timeout
       if ![player || email, password].any?(&:nil?)
@@ -94,20 +96,33 @@ module SquashMatrix
           if is_get_request
             req = Net::HTTP::Get.new(uri)
             set_headers(req, headers: headers)
-            res = Net::HTTP.start(uri.hostname, uri.port, {use_ssl: uri.scheme == 'https'}) {|http| http.request(req)}
           else
-            res = Net::HTTP.post_form(uri, query_params)
+            req = Net::HTTP::Post.new(uri)
+            set_headers(req)
+            form_data = []
+            query_params.each {|key, value| form_data.push([key.to_s, value.to_s])}
+            # puts form_data
+            set_headers(req, headers: headers)
+            req.set_form(form_data, 'multipart/form-data')
+            # res = Net::HTTP.post_form(uri, query_params)
           end
-          # binding.pry if /Request made too soon. This is to prevent abuse to the site. We apologise for the inconvenience/.match(res.body)
-          # binding.pry if /Forbidden/.match(res.body)
+          res = Net::HTTP.start(uri.hostname, uri.port, {use_ssl: uri.scheme == 'https'}) {|http| http.request(req)}
+          # puts uri
+          # puts req.each_header.to_h if req
+          # puts res.each_header.to_h
+          # puts res.body
+          binding.pry if /Request made too soon. This is to prevent abuse to the site. We apologise for the inconvenience/.match(res.body)
+          binding.pry if /Forbidden/.match(res.body)
           case res
           when Net::HTTPSuccess, Net::HTTPFound
             return success_proc && success_proc.call(res) || res
           when Net::HTTPConflict
+            binding.pry
             # res.body == "Forbidden"
             # find error? Request made too soon. This is to prevent abuse to the site. We apologise for the inconvenience.
             raise SquashMatrix::Errors::ForbiddenError.new(res.body) unless @suppress_errors
           else
+            binding.pry
             raise SquashMatrix::Errors::UnknownError.new(res) unless @suppress_errors
           end
         end
@@ -117,20 +132,21 @@ module SquashMatrix
     end
 
     def authenticate
-      uri = URI::HTTP.build({
+      uri = URI::HTTPS.build({
         host: SquashMatrix::Constants::SQUASH_MATRIX_URL,
         path: SquashMatrix::Constants::LOGIN_PATH})
-      headers = {
-        SquashMatrix::Constants::CONTENT_TYPE_HEADER.to_sym => SquashMatrix::Constants::X_WWW__FROM_URL_ENCODED
-      }
       query_params = {
         UserName: @player&.to_s || @email,
         Password: @password,
         RememberMe: false
       }
+      headers = {
+        SquashMatrix::Constants::CONTENT_TYPE_HEADER => SquashMatrix::Constants::MULTIPART_FORM_DATA
+      }
+      # need to retrieve the asp.net session id
       home_page_res = handle_http_request(@squash_matrix_home_uri, nil)
-      raise SquashMatrix::Errors::AuthorizationError.new("Error retrieving ASP.NET_SESSION info") unless home_page_res
-      home_page_res['set-cookie'].split('; ').each do |v|
+      raise SquashMatrix::Errors::AuthorizationError.new(SquashMatrix::Constants::ERROR_RETRIEVING_ASPNET_SESSION) unless home_page_res
+      home_page_res[SquashMatrix::Constants::SET_COOKIE_HEADER].split('; ').each do |v|
         @cookie_jar.parse(v, @squash_matrix_home_uri)
       end
       res = handle_http_request(uri, nil,
@@ -139,8 +155,8 @@ module SquashMatrix
           query_params: query_params,
           headers: headers
         })
-      raise SquashMatrix::Errors::AuthorizationError.new("Error retrieving .ASPXAUTH_TOKEN") unless res
-      res['set-cookie'].split('; ').each do |v|
+      raise SquashMatrix::Errors::AuthorizationError.new(SquashMatrix::Constants::ERROR_RETRIEVING_ASPAUX_TOKEN) unless res
+      res[SquashMatrix::Constants::SET_COOKIE_HEADER].split('; ').each do |v|
         @cookie_jar.parse(v, @squash_matrix_home_uri)
       end
       @player = SquashMatrix::Constants::PLAYER_FROM_PATH_REGEX.match(res[SquashMatrix::Constants::LOCATION_HEADER])[1] if @player.nil? && res[SquashMatrix::Constants::LOCATION_HEADER]
@@ -152,19 +168,23 @@ module SquashMatrix
 
     def set_headers(req=nil, headers: nil)
       return unless req
-      headers_to_add = {}
-      headers_to_add.merge(headers) if headers
+      headers_to_add = {
+        # 'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        # 'accept-encoding': 'gzip, deflate, br',
+        SquashMatrix::Constants::USER_AGENT_HEADER => @user_agent,
+        SquashMatrix::Constants::HOST_HEADER => SquashMatrix::Constants::SQUASH_MATRIX_URL}
+      headers_to_add = headers_to_add.merge(headers) if headers
       if @cookie_jar
         cookies = @cookie_jar.cookies(@squash_matrix_home_uri).select do |c|
           [
-            SquashMatrix::Constants::ASPXAUTH_COOKIE_NAME,
             SquashMatrix::Constants::ASP_NET_SESSION_ID_COOKIE_NAME,
-            SquashMatrix::Constants::GROUP_ID_COOKIE_NAME
+            SquashMatrix::Constants::GROUP_ID_COOKIE_NAME,
+            SquashMatrix::Constants::ASPXAUTH_COOKIE_NAME
           ].include?(c.name)
         end
-        headers_to_add.merge({'cookie': HTTP::Cookie.cookie_value(cookies)})
+        headers_to_add = headers_to_add.merge({SquashMatrix::Constants::COOKIE_HEADER => HTTP::Cookie.cookie_value(cookies)})
       end
-      headers_to_add.each {|key, val| req[key] = val}
+      headers_to_add.each {|key, val| req[key.to_s] = val}
     end
   end
 end

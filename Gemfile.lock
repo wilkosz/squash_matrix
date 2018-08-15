@@ -4,6 +4,7 @@ PATH
     squash_matrix (0.1.0)
       http-cookie (~> 1.0, >= 1.0.3)
       nokogiri (~> 1.8, >= 1.8.4)
+      user-agent-randomizer (~> 0.2)
 
 GEM
   remote: https://rubygems.org/
@@ -40,6 +41,7 @@ GEM
     unf (0.1.4)
       unf_ext
     unf_ext (0.0.7.5)
+    user-agent-randomizer (0.2.0)
 
 PLATFORMS
   ruby

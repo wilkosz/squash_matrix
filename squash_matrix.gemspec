@@ -36,6 +36,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "rspec", "~> 3.0"
   spec.add_development_dependency "pry", "~> 0.10.3"
+  spec.add_runtime_dependency 'user-agent-randomizer', '~> 0.2'
   spec.add_runtime_dependency 'http-cookie', '~> 1.0', '>= 1.0.3'
   spec.add_runtime_dependency 'nokogiri', '~> 1.8', '>= 1.8.4'
   spec.required_ruby_version = '>= 2.3.0'
