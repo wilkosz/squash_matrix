@@ -51,7 +51,7 @@ client.club_info(336) # retrieve club info for melbourne university #336
       :name=>"David Clegg",
       :rating=>342.5,
       :rank=>0,
-      :id=>"43076"
+      :id=>43076
     }
   ],
   :juniors=>[
@@ -59,7 +59,7 @@ client.club_info(336) # retrieve club info for melbourne university #336
       :name=>"Trevor Bryden",
       :rating=>95.28,
       :rank=>0,
-      :id=>"72728"
+      :id=>72728
     }
   ]
 }

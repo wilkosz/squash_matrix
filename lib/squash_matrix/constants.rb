@@ -13,12 +13,14 @@ module SquashMatrix
     MULTIPART_FORM_DATA = 'multipart/form-data'
     CONTENT_TYPE_HEADER = 'Content-Type'
     REFERER = "Home/Player/:id"
+    ASPXAUTH_COOKIE_NAME = ".ASPXAUTH"
+    ASP_NET_SESSION_ID_COOKIE_NAME = "ASP.NET_SessionId"
+    GROUP_ID_COOKIE_NAME = "GroupId"
 
     PLAYER_FROM_PATH_REGEX = /\/Home\/Player\/(.*)/
     TEAM_FROM_PATH_REGEX = /\/Home\/Team\/(.*)/
     CLUB_FROM_PATH_REGEX = /\/Home\/Club\/(.*)/
     MATCH_FROM_PATH_REGEX = /\/Home\/Match\/(.*)/
     CLUB_FROM_TITLE_REGEX = /Club - (.*)/
-    ASPXAUTH_TOKEN_FROM_COOKIE_REGEX = /.ASPXAUTH=([a-zA-Z0-9]*);/
   end
 end

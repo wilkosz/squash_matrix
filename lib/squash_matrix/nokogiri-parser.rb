@@ -39,7 +39,7 @@ module SquashMatrix
             rating: r.css('td[3]').text.to_f
           }
           rtn[:rank] = rank.to_i if rank
-          rtn[:id] = SquashMatrix::Constants::PLAYER_FROM_PATH_REGEX.match(player_path)[1] if player_path
+          rtn[:id] = SquashMatrix::Constants::PLAYER_FROM_PATH_REGEX.match(player_path)[1].to_i if player_path
           rtn
         end.compact
         juniors = html.xpath('//div[@id="Rankings"]//div[@class="columnside"]//table[@class="alternaterows"]//tbody//tr')&.map do |r|
@@ -50,7 +50,7 @@ module SquashMatrix
             rating: r.css('td[3]').text.to_f
           }
           rtn[:rank] = rank.to_i if rank
-          rtn[:id] = SquashMatrix::Constants::PLAYER_FROM_PATH_REGEX.match(player_path)[1] if player_path
+          rtn[:id] = SquashMatrix::Constants::PLAYER_FROM_PATH_REGEX.match(player_path)[1].to_i if player_path
           rtn
         end.compact
         {
@@ -122,6 +122,10 @@ module SquashMatrix
           rtn[:id] = SquashMatrix::Constants::CLUB_FROM_PATH_REGEX.match(id)[1].to_i if id
           rtn
         end
+      end
+
+      def requests_made_to_soon?(body)
+        Nokogiri::HTML(body)&.xpath('//body')
       end
     end
   end

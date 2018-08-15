@@ -1,6 +1,7 @@
 require 'net/http'
 require 'date'
 require 'timeout'
+require 'http-cookie'
 require_relative 'constants'
 require_relative 'nokogiri-parser'
 require_relative 'errors'
@@ -20,28 +21,25 @@ module SquashMatrix
     # @return [Client]
 
     def initialize(player: nil, email: nil, password: nil, suppress_errors: false, timeout: 60)
+      @squash_matrix_home_uri = URI::HTTP.build({ host: SquashMatrix::Constants::SQUASH_MATRIX_URL, path: '/'})
       @suppress_errors = suppress_errors
       @timeout = timeout
       if ![player || email, password].any?(&:nil?)
-        @authenticated = {
-          valid: false,
-          authenticated_at: nil,
-          updated_at: nil,
-          cookie: nil,
-          player: player,
-          email: email,
-          password: password
-        }
+        @cookie_jar = HTTP::CookieJar.new()
+        @player = player
+        @email = email
+        @password = password
         authenticate
       end
     end
 
     # Returns club info.
     # @note If suppress_errors == false SquashMatrix Errors will be raised upon HttpNotFound, HttpConflict, Timeout::Error, etc...
-    # @param id [Numeric] club id found on squash matrix
+    # @param id [Fixnum] club id found on squash matrix
     # @return [Hash] hash object containing club information
 
     def club_info(id=nil)
+      return if id.nil?
       uri = URI::HTTP.build({
         host: SquashMatrix::Constants::SQUASH_MATRIX_URL,
         path: SquashMatrix::Constants::CLUB_PATH.gsub(':id', id.to_s)
@@ -52,7 +50,7 @@ module SquashMatrix
 
     # Returns player info.
     # @note If suppress_errors == false SquashMatrix Errors will be raised upon HttpNotFound, HttpConflict, Timeout::Error, etc...
-    # @param id [Numeric] played id found on squash matrix
+    # @param id [Fixnum] played id found on squash matrix
     # @return [Hash] hash object containing player information
 
     def player_info(id=nil)
@@ -96,15 +94,19 @@ module SquashMatrix
           if is_get_request
             req = Net::HTTP::Get.new(uri)
             set_headers(req, headers: headers)
-            res = Net::HTTP.start(uri.hostname, uri.port) {|http| http.request(req)}
+            res = Net::HTTP.start(uri.hostname, uri.port, {use_ssl: uri.scheme == 'https'}) {|http| http.request(req)}
           else
             res = Net::HTTP.post_form(uri, query_params)
           end
+          # binding.pry if /Request made too soon. This is to prevent abuse to the site. We apologise for the inconvenience/.match(res.body)
+          # binding.pry if /Forbidden/.match(res.body)
           case res
-          when Net::HTTPSuccess
+          when Net::HTTPSuccess, Net::HTTPFound
             return success_proc && success_proc.call(res) || res
           when Net::HTTPConflict
-            raise SquashMatrix::Errors::ForbiddenError.new(res) unless @suppress_errors
+            # res.body == "Forbidden"
+            # find error? Request made too soon. This is to prevent abuse to the site. We apologise for the inconvenience.
+            raise SquashMatrix::Errors::ForbiddenError.new(res.body) unless @suppress_errors
           else
             raise SquashMatrix::Errors::UnknownError.new(res) unless @suppress_errors
           end
@@ -115,7 +117,6 @@ module SquashMatrix
     end
 
     def authenticate
-      return unless @authenticated
       uri = URI::HTTP.build({
         host: SquashMatrix::Constants::SQUASH_MATRIX_URL,
         path: SquashMatrix::Constants::LOGIN_PATH})
@@ -123,24 +124,27 @@ module SquashMatrix
         SquashMatrix::Constants::CONTENT_TYPE_HEADER.to_sym => SquashMatrix::Constants::X_WWW__FROM_URL_ENCODED
       }
       query_params = {
-        UserName: @authenticated[:player] || @authenticated[:email],
-        Password: @authenticated[:password],
+        UserName: @player&.to_s || @email,
+        Password: @password,
         RememberMe: false
       }
+      home_page_res = handle_http_request(@squash_matrix_home_uri, nil)
+      raise SquashMatrix::Errors::AuthorizationError.new("Error retrieving ASP.NET_SESSION info") unless home_page_res
+      home_page_res['set-cookie'].split('; ').each do |v|
+        @cookie_jar.parse(v, @squash_matrix_home_uri)
+      end
       res = handle_http_request(uri, nil,
         {
           is_get_request: false,
           query_params: query_params,
           headers: headers
         })
-      return unless res
-      @authenticated[:cookie] = res.response[SquashMatrix::Constants::SET_COOKIE_HEADER]
-      if auth_token_from_cookie(@authenticated[:cookie])
-        @authenticated[:authenticated_at] = Time.now.utc
-        @authenticated[:updated_at] = Time.now.utc
-        @authenticated[:valid] = true
-        @authenticated[:player] = SquashMatrix::Constants::PLAYER_FROM_PATH_REGEX.match(res.response[SquashMatrix::Constants::LOCATION_HEADER])[1] if @authenticated[:email] && res.response[SquashMatrix::Constants::LOCATION_HEADER]
-      elsif !@suppress_errors
+      raise SquashMatrix::Errors::AuthorizationError.new("Error retrieving .ASPXAUTH_TOKEN") unless res
+      res['set-cookie'].split('; ').each do |v|
+        @cookie_jar.parse(v, @squash_matrix_home_uri)
+      end
+      @player = SquashMatrix::Constants::PLAYER_FROM_PATH_REGEX.match(res[SquashMatrix::Constants::LOCATION_HEADER])[1] if @player.nil? && res[SquashMatrix::Constants::LOCATION_HEADER]
+      unless !@suppress_errors && @cookie_jar.cookies(@squash_matrix_home_uri).find {|c| c.name == SquashMatrix::Constants::ASPXAUTH_COOKIE_NAME && !c.value.empty?}
         error_string = SquashMatrix::NokogiriParser.log_on_error(res.body).join(', ')
         raise SquashMatrix::Errors::AuthorizationError.new(error_string)
       end
@@ -150,17 +154,17 @@ module SquashMatrix
       return unless req
       headers_to_add = {}
       headers_to_add.merge(headers) if headers
-      headers_to_add.merge({
-        Cookie: @authenticated[:cookie],
-        Referer: SquashMatrix::Constants::REFERER.gsub(':id', @authenticated[:player]),
-      }) if @authenticated
+      if @cookie_jar
+        cookies = @cookie_jar.cookies(@squash_matrix_home_uri).select do |c|
+          [
+            SquashMatrix::Constants::ASPXAUTH_COOKIE_NAME,
+            SquashMatrix::Constants::ASP_NET_SESSION_ID_COOKIE_NAME,
+            SquashMatrix::Constants::GROUP_ID_COOKIE_NAME
+          ].include?(c.name)
+        end
+        headers_to_add.merge({'cookie': HTTP::Cookie.cookie_value(cookies)})
+      end
       headers_to_add.each {|key, val| req[key] = val}
-    end
-
-    def auth_token_from_cookie(cookie=nil)
-      return unless !cookie.nil? && !cookie.empty?
-      rtn = SquashMatrix::Constants::ASPXAUTH_TOKEN_FROM_COOKIE_REGEX.match(cookie)
-      rtn[1] if rtn
     end
   end
 end
