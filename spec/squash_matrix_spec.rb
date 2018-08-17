@@ -38,7 +38,7 @@ end
 
 RSpec.describe SquashMatrix::Client do
   # squash matrix will throw forbidden error if frequency too high
-  after(:example) { puts "\tsleeping for 60"; sleep 60 }
+  after(:example) { puts "\s\ssleeping for 60"; sleep 60 }
 
   it "creates a client" do
     c = SquashMatrix::Client.new
