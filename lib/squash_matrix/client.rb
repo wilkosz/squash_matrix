@@ -162,11 +162,11 @@ module SquashMatrix
           headers: headers
         })
       raise SquashMatrix::Errors::AuthorizationError.new(SquashMatrix::Constants::ERROR_RETRIEVING_ASPAUX_TOKEN) unless res
-      res[SquashMatrix::Constants::SET_COOKIE_HEADER].split('; ').each do |v|
+      res[SquashMatrix::Constants::SET_COOKIE_HEADER]&.split('; ')&.each do |v|
         @cookie_jar.parse(v, @squash_matrix_home_uri)
       end
-      @player = SquashMatrix::Constants::PLAYER_FROM_PATH_REGEX.match(res[SquashMatrix::Constants::LOCATION_HEADER])[1] if @player.nil? && res[SquashMatrix::Constants::LOCATION_HEADER]
-      unless !@suppress_errors && @cookie_jar.cookies(@squash_matrix_home_uri).find {|c| c.name == SquashMatrix::Constants::ASPXAUTH_COOKIE_NAME && !c.value.empty?}
+      @player = SquashMatrix::Constants::PLAYER_FROM_PATH_REGEX.match(res[SquashMatrix::Constants::LOCATION_HEADER])[1] if @player.nil? && !res[SquashMatrix::Constants::LOCATION_HEADER].empty?
+      if !@suppress_errors && !@cookie_jar&.cookies(@squash_matrix_home_uri)&.find {|c| c.name == SquashMatrix::Constants::ASPXAUTH_COOKIE_NAME && !c.value.empty?}
         error_string = SquashMatrix::NokogiriParser.log_on_error(res.body).join(', ')
         raise SquashMatrix::Errors::AuthorizationError.new(error_string)
       end

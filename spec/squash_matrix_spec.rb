@@ -24,11 +24,21 @@ RSpec.describe SquashMatrix::Constants do
   it "club id from path" do
     expect(SquashMatrix::Constants::CLUB_FROM_PATH_REGEX.match("/Home/Club/336")[1]).to eq("336")
   end
+
+  it "too many requests from body" do
+    body = "foo foo Request made too soon. This is to prevent abuse to the site. We apologise for the inconvenience foo foo"
+    expect(SquashMatrix::Constants::TOO_MANY_REQUESTS_ERROR_REGEX.match(body)).not_to be nil
+  end
+
+  it "forbidden from body" do
+    body = "foo foo Forbidden foo foo"
+    expect(SquashMatrix::Constants::FORBIDDEN_ERROR_REGEX.match(body)).not_to be nil
+  end
 end
 
 RSpec.describe SquashMatrix::Client do
   # squash matrix will throw forbidden error if frequency too high
-  after(:example) { puts "sleeping for 30"; sleep 30 }
+  after(:example) { puts "\tsleeping for 60"; sleep 60 }
 
   it "creates a client" do
     c = SquashMatrix::Client.new
