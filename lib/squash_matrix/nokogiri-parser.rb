@@ -4,7 +4,7 @@ require_relative 'constants'
 module SquashMatrix
   class NokogiriParser
     class << self
-      def player_info(body)
+      def player_rsults(body)
         Nokogiri::HTML(body)&.xpath('//table[@id="results"]//tbody//tr')&.map do |r|
           date = r.at_css('td[1]')&.content
           opponent_id = r.at_css('td[10]//a')&.attribute('href')&.content
@@ -26,6 +26,32 @@ module SquashMatrix
           rtn[:match_id] = SquashMatrix::Constants::MATCH_FROM_PATH_REGEX.match(match_id)[1].to_i if match_id
           rtn.values.any?(&:nil?) ? nil : rtn
         end.compact
+      end
+
+      def player_info(body)
+        rows = Nokogiri::HTML(body)&.xpath('//table[@id="profile"]//tbody//tr')
+        rating = rows[1]&.css('td[2]')&.text
+        clubs = rows[2]&.css('td[2]')&.css('ul//li')&.map do |c|
+          id = c&.css('a')&.attribute('href')&.text
+          rtn = {
+            name: c&.text
+          }
+          rtn[:id] = SquashMatrix::Constants::CLUB_FROM_PATH_REGEX.match(id)[1].to_i if id
+          rtn
+        end
+        teams = rows[3]&.css('td[2]')&.css('ul//li')&.map do |c|
+          id = c&.css('a')&.attribute('href')&.text
+          rtn = {
+            name: c&.text
+          }
+          rtn[:id] = SquashMatrix::Constants::TEAM_FROM_PATH_REGEX.match(id)[1].to_i if id
+          rtn
+        end
+        {
+          rating: rating,
+          clubs: clubs,
+          teams: teams
+        }
       end
 
       def club_info(body)

@@ -3,7 +3,8 @@ module SquashMatrix
   module Constants
     SQUASH_MATRIX_URL = "www.squashmatrix.com"
     LOGIN_PATH = "/Account/LogOn"
-    PLAYER_PATH = "/Home/PlayerResults/:id"
+    PLAYER_RESULTS_PATH = "/Home/PlayerResults/:id"
+    PLAYER_HOME_PATH = "/Home/Player/:id"
     CLUB_PATH = "/Home/Club/:id"
     SEARCH_PATH = "/Home/Search"
     PLAYER_RSULTS_QUERY = "max=0&X-Requested-With=XMLHttpRequest"

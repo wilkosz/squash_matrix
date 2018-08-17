@@ -2,8 +2,6 @@
 
 Ruby SDK for www.squashmatrix.com
 
-The generated client interacts with www.squashmatrix.com by retrieving player and club information and performing search requests.
-
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -25,7 +23,23 @@ Or install it yourself as:
 ```ruby
 client = SquashMatrix::Client.new # initialize client
 => SquashMatrix::Client
-client.player_info(42547) # retrieve player info for joshua wilkosz #42547
+client.player_info(42547) # retrieve player results for joshua wilkosz #42547
+=> {
+  :rating=>"250.202",
+  :clubs=>[
+    {
+      :name=>"Melbourne University (2011-2017)",
+      :id=>336
+    }
+  ],
+  :teams=>[
+    {
+      :name=>"Melbourne University (2) (2017)",
+      :id=>72831
+    }
+  ]
+}
+client.player_results(42547) # retrieve player results for joshua wilkosz #42547
 => [
   {
     :event=>"2017 Melbourne Autumn  State Open Pennant",

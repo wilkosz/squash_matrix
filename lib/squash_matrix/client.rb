@@ -50,6 +50,22 @@ module SquashMatrix
       handle_http_request(uri, success_proc)
     end
 
+    # Returns player results.
+    # @note If suppress_errors == false SquashMatrix Errors will be raised upon HttpNotFound, HttpConflict, Timeout::Error, etc...
+    # @param id [Fixnum] played id found on squash matrix
+    # @return [Array<Hash>] Array of player match results
+
+    def player_results(id=nil)
+      return if id.nil?
+      uri = URI::HTTP.build({
+        host: SquashMatrix::Constants::SQUASH_MATRIX_URL,
+        path: SquashMatrix::Constants::PLAYER_RESULTS_PATH.gsub(':id', id.to_s),
+        query: SquashMatrix::Constants::PLAYER_RSULTS_QUERY
+        })
+      success_proc = lambda {|res| SquashMatrix::NokogiriParser.player_results(res.body)}
+      handle_http_request(uri, success_proc)
+    end
+
     # Returns player info.
     # @note If suppress_errors == false SquashMatrix Errors will be raised upon HttpNotFound, HttpConflict, Timeout::Error, etc...
     # @param id [Fixnum] played id found on squash matrix
@@ -59,8 +75,7 @@ module SquashMatrix
       return if id.nil?
       uri = URI::HTTP.build({
         host: SquashMatrix::Constants::SQUASH_MATRIX_URL,
-        path: SquashMatrix::Constants::PLAYER_PATH.gsub(':id', id.to_s),
-        query: SquashMatrix::Constants::PLAYER_RSULTS_QUERY
+        path: SquashMatrix::Constants::PLAYER_HOME_PATH.gsub(':id', id.to_s)
         })
       success_proc = lambda {|res| SquashMatrix::NokogiriParser.player_info(res.body)}
       handle_http_request(uri, success_proc)
