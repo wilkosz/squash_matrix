@@ -16,21 +16,48 @@ module SquashMatrix
 
   class Client
 
+    # Returns params to create existing authenticated client
+    # @note If suppress_errors == false SquashMatrix::Errors::AuthorizationError will be raised if specified credentials are incorrect and squash matrix authentication returns forbidden
+    # @return [Hash]
+
+    def get_initialize_params
+      {
+        player: @player,
+        email: @email,
+        password: @password,
+        suppress_errors: @suppress_errors,
+        timeout: @timeout,
+        user_agent: @user_agent,
+        cookie_jar_string: get_cookie_jar_string
+      }.compact
+    end
+
     # Returns newly created Client
     # @note If suppress_errors == false SquashMatrix::Errors::AuthorizationError will be raised if specified credentials are incorrect and squash matrix authentication returns forbidden
     # @param [Hash] opts the options to create client
     # @return [Client]
 
-    def initialize(player: nil, email: nil, password: nil, suppress_errors: false, timeout: 60)
-      @user_agent =  UserAgentRandomizer::UserAgent.fetch(type: "desktop_browser").string
+    def initialize(player: nil,
+        email: nil,
+        password: nil,
+        suppress_errors: false,
+        timeout: 60,
+        user_agent: nil,
+        cookie_jar_string: nil)
+      @user_agent = user_agent || UserAgentRandomizer::UserAgent.fetch(type: "desktop_browser").string
       @squash_matrix_home_uri = URI::HTTP.build({ host: SquashMatrix::Constants::SQUASH_MATRIX_URL })
       @suppress_errors = suppress_errors
       @timeout = timeout
-      if ![player || email, password].any?(&:nil?)
-        @cookie_jar = HTTP::CookieJar.new()
-        @player = player
-        @email = email
-        @password = password
+      return unless ![player || email, password].any?(&:nil?)
+      @cookie_jar = HTTP::CookieJar.new()
+      @player = player
+      @email = email
+      @password = password
+      if cookie_jar_string
+        cookie_jar_string.split('; ').each do |v|
+          @cookie_jar.parse(v, @squash_matrix_home_uri)
+        end
+      else
         authenticate
       end
     end
@@ -178,17 +205,20 @@ module SquashMatrix
         SquashMatrix::Constants::USER_AGENT_HEADER => @user_agent,
         SquashMatrix::Constants::HOST_HEADER => SquashMatrix::Constants::SQUASH_MATRIX_URL}
       headers_to_add = headers_to_add.merge(headers) if headers
-      if @cookie_jar
-        cookies = @cookie_jar.cookies(@squash_matrix_home_uri).select do |c|
-          [
-            SquashMatrix::Constants::ASP_NET_SESSION_ID_COOKIE_NAME,
-            SquashMatrix::Constants::GROUP_ID_COOKIE_NAME,
-            SquashMatrix::Constants::ASPXAUTH_COOKIE_NAME
-          ].include?(c.name)
-        end
-        headers_to_add = headers_to_add.merge({SquashMatrix::Constants::COOKIE_HEADER => HTTP::Cookie.cookie_value(cookies)})
-      end
+      headers_to_add = headers_to_add.merge({SquashMatrix::Constants::COOKIE_HEADER => get_cookie_jar_string}) if @cookie_jar
       headers_to_add.each {|key, val| req[key.to_s] = val}
+    end
+
+    def get_cookie_jar_string
+      return unless @cookie_jar
+      cookies = @cookie_jar.cookies(@squash_matrix_home_uri).select do |c|
+        [
+          SquashMatrix::Constants::ASP_NET_SESSION_ID_COOKIE_NAME,
+          SquashMatrix::Constants::GROUP_ID_COOKIE_NAME,
+          SquashMatrix::Constants::ASPXAUTH_COOKIE_NAME
+        ].include?(c.name)
+      end
+      HTTP::Cookie.cookie_value(cookies)
     end
   end
 end
