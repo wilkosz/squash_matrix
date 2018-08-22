@@ -9,3 +9,5 @@
 **/*.gem
 # rspec failure tracking
 .rspec_status
+# Rubocop
+**/*.rubocop.yml

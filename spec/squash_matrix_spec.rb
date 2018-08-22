@@ -51,21 +51,21 @@ RSpec.describe SquashMatrix::Client do
 
   it "client throws Timeout::Error" do
     c = SquashMatrix::Client.new(timeout: 1)
-    expect {c.player_info(1)}.to raise_error(Timeout::Error)
+    expect {c.get_player_info(1)}.to raise_error(Timeout::Error)
   end
 
   it "client exceptions suppressed" do
     c = SquashMatrix::Client.new(timeout: 1, suppress_errors: true)
-    expect(c.player_info(1)).to be nil
+    expect(c.get_player_info(1)).to be nil
   end
 
   it "client returns joshua wilkosz player information" do
     c = SquashMatrix::Client.new
-    expect(c.player_info(42547)).not_to be nil
+    expect(c.get_player_info(42547)).not_to be nil
   end
 
   it "client returns melbourne university club information" do
     c = SquashMatrix::Client.new
-    expect(c.club_info(336)).not_to be nil
+    expect(c.get_club_info(336)).not_to be nil
   end
 end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module SquashMatrix
   module Errors
     class TooManyRequestsError < StandardError; end

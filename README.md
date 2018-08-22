@@ -21,9 +21,9 @@ Or install it yourself as:
 ## Usage
 
 ```ruby
-client = SquashMatrix::Client.new # initialize client
+client = SquashMatrix::Client.new(player: 42547, password: "foo")# initialize client
 => SquashMatrix::Client
-client.player_info(42547) # retrieve player results for joshua wilkosz #42547
+client.get_player_info(42547) # retrieve player info for joshua wilkosz #42547
 => {
   :rating=>"250.202",
   :clubs=>[
@@ -39,7 +39,7 @@ client.player_info(42547) # retrieve player results for joshua wilkosz #42547
     }
   ]
 }
-client.player_results(42547) # retrieve player results for joshua wilkosz #42547
+client.get_player_results(42547) # retrieve player results for joshua wilkosz #42547
 => [
   {
     :event=>"2017 Melbourne Autumn  State Open Pennant",
@@ -57,7 +57,7 @@ client.player_results(42547) # retrieve player results for joshua wilkosz #42547
     :match_id=>1003302
   }
 ]
-client.club_info(336) # retrieve club info for melbourne university #336
+client.get_club_info(336) # retrieve club info for melbourne university #336
 => {
   :name=>"Melbourne University Squash Club",
   :players=>[
@@ -77,7 +77,7 @@ client.club_info(336) # retrieve club info for melbourne university #336
     }
   ]
 }
-client.search("joshua") # search for 'joshua'
+client.get_search_results("joshua") # search results for 'joshua'
 => {
   :players=>[
     {
@@ -97,7 +97,7 @@ client.search("joshua") # search for 'joshua'
   ],
   :clubs=>[]
 }
-client.search("melbourne") # search for 'melbourne'
+client.get_search_results("melbourne") # search results for 'melbourne'
 => {
   :players=>[
     {
@@ -124,6 +124,9 @@ client.search("melbourne") # search for 'melbourne'
   ]
 }
 ```
+
+
+
 
 ## Development
 
