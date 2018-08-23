@@ -123,10 +123,20 @@ client.get_search_results("melbourne") # search results for 'melbourne'
     }
   ]
 }
+# saving authentication state or using multiple clients
+p = client.get_save_params
+p => {
+  :player=>42547,
+  :password=>"Foo",
+  :suppress_errors=>false,  
+  :user_agent=>"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.2.13) Gecko/20101213 Opera/9.80 (Windows NT 6.1; U; zh-tw) Presto/2.7.62 Version/11.01",
+  :cookie=>".ASPXAUTH=CDA48BC54FCEB4F164D6AC464EFB3414866040FF085915F32BA18EFD5CF995DC59889B5E2124567CBE1B53DE66D6318E6510C5B884EAB5216457092AC079999C3E63BDDA45C94CCA1CD82E485A30D698BA426F4AA9C94301125966DB5D05FD4D; ASP.NET_SessionId=tx02u3xp51js1s3mgwwxhgq1; GroupId=0",
+  :expires=>"2018-08-25 17:05:04 UTC"
+}
+replica_client = SquashMatrix::Client.new(p)
+=> SquashMatrix::Client
 ```
-
-
-
+*Note: in previous example `client` and `replica_client` authentication will expire at `2018-08-25 17:05:04 UTC` and make separate calls for re-authentication and thereafter will have separate instance states*
 
 ## Development
 
@@ -138,7 +148,7 @@ To run tests, run `bundle exec rspec`
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/wilkosz/squash_matrix. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+Bug reports and pull requests are welcome on GitHub at <https://github.com/wilkosz/squash_matrix>. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
 ## License
 
