@@ -27,7 +27,8 @@ module SquashMatrix
         suppress_errors: @suppress_errors,
         timeout: @timeout,
         user_agent: @user_agent,
-        cookie: get_cookie_string
+        cookie: get_cookie_string,
+        expires: @expires.to_s
       }.compact
     end
 
@@ -42,7 +43,8 @@ module SquashMatrix
                    suppress_errors: false,
                    timeout: 60,
                    user_agent: nil,
-                   cookie: nil)
+                   cookie: nil,
+                   expires: nil)
       @user_agent = user_agent || UserAgentRandomizer::UserAgent.fetch(type: 'desktop_browser').string
       @squash_matrix_home_uri = URI::HTTP.build(host: SquashMatrix::Constants::SQUASH_MATRIX_URL)
       @suppress_errors = suppress_errors
@@ -52,7 +54,8 @@ module SquashMatrix
       @player = player
       @email = email
       @password = password
-      if cookie
+      @expires = Time.parse(expires).utc
+      if cookie && @expires > Time.now.utc
         cookie.split('; ').each do |v|
           @cookie_jar.parse(v, @squash_matrix_home_uri)
         end
@@ -141,11 +144,18 @@ module SquashMatrix
 
     private
 
+    def check_authentication
+      return unless @expires
+      setup_authentication && sleep(10) if @expires <= Time.now.utc
+    end
+
     def handle_http_request(uri, success_proc,
                             is_get_request: true,
                             query_params: nil,
-                            headers: nil)
+                            headers: nil,
+                            is_authentication_request: false)
       Timeout.timeout(@timeout) do
+        check_authentication unless is_authentication_request
         if is_get_request
           req = Net::HTTP::Get.new(uri)
           set_headers(req, headers: headers)
@@ -184,13 +194,15 @@ module SquashMatrix
       query_params = {
         UserName: @player&.to_s || @email,
         Password: @password,
-        RememberMe: false
+        RememberMe: true
       }
       headers = {
         SquashMatrix::Constants::CONTENT_TYPE_HEADER => SquashMatrix::Constants::MULTIPART_FORM_DATA
       }
       # need to retrieve the asp.net session id
-      home_page_res = handle_http_request(@squash_matrix_home_uri, nil)
+      home_page_res = handle_http_request(@squash_matrix_home_uri,
+                                          nil,
+                                          is_authentication_request: true)
       raise SquashMatrix::Errors::AuthorizationError, SquashMatrix::Constants::ERROR_RETRIEVING_ASPNET_SESSION unless home_page_res
       home_page_res[SquashMatrix::Constants::SET_COOKIE_HEADER].split('; ').each do |v|
         @cookie_jar.parse(v, @squash_matrix_home_uri)
@@ -198,11 +210,15 @@ module SquashMatrix
       res = handle_http_request(uri, nil,
                                 is_get_request: false,
                                 query_params: query_params,
-                                headers: headers)
+                                headers: headers,
+                                is_authentication_request: true)
       raise SquashMatrix::Errors::AuthorizationError, SquashMatrix::Constants::ERROR_RETRIEVING_ASPAUX_TOKEN unless res
       res[SquashMatrix::Constants::SET_COOKIE_HEADER]&.split('; ')&.each do |v|
+        parts = SquashMatrix::Constants::EXPIRES_FROM_COOKIE_REGEX.match(v)
+        @expires = Time.parse(parts[1]).utc if parts
         @cookie_jar.parse(v, @squash_matrix_home_uri)
       end
+      @expires ||= Time.now.utc + 60 * 60 * 24 * 2 # default expires in two days (usually 52 hours)
       @player = SquashMatrix::Constants::PLAYER_FROM_PATH_REGEX.match(res[SquashMatrix::Constants::LOCATION_HEADER])[1] if @player.nil? && !res[SquashMatrix::Constants::LOCATION_HEADER].empty?
       return unless !@suppress_errors && !@cookie_jar&.cookies(@squash_matrix_home_uri)&.find { |c| c.name == SquashMatrix::Constants::ASPXAUTH_COOKIE_NAME && !c.value.empty? }
       error_string = SquashMatrix::NokogiriParser.get_log_on_error(res.body).join(', ')

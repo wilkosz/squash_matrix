@@ -21,12 +21,14 @@ module SquashMatrix
     GROUP_ID_COOKIE_NAME = 'GroupId'
     HOST_HEADER = 'host'
     USER_AGENT_HEADER = 'user-agent'
+    EXPIRES_COOKIE_NAME = 'expires'
 
     PLAYER_FROM_PATH_REGEX = /\/Home\/Player\/(.*)/
     TEAM_FROM_PATH_REGEX = /\/Home\/Team\/(.*)/
     CLUB_FROM_PATH_REGEX = /\/Home\/Club\/(.*)/
     MATCH_FROM_PATH_REGEX = /\/Home\/Match\/(.*)/
     CLUB_FROM_TITLE_REGEX = /Club - (.*)/
+    EXPIRES_FROM_COOKIE_REGEX = /expires=(.*)/
 
     ERROR_RETRIEVING_ASPNET_SESSION = 'Error retrieving ASP.NET_SessionId'
     ERROR_RETRIEVING_ASPAUX_TOKEN = 'Error retrieving .ASPXAUTH_TOKEN'
