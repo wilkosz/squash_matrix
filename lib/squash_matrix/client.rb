@@ -29,7 +29,7 @@ module SquashMatrix
         user_agent: @user_agent,
         cookie: get_cookie_string,
         expires: @expires.to_s
-      }.compact
+      }.delete_if { |_k, v| v.nil? }
     end
 
     # Returns newly created Client
@@ -54,7 +54,7 @@ module SquashMatrix
       @player = player
       @email = email
       @password = password
-      @expires = Time.parse(expires).utc
+      @expires = expires && Time.parse(expires).utc
       if cookie && @expires > Time.now.utc
         cookie.split('; ').each do |v|
           @cookie_jar.parse(v, @squash_matrix_home_uri)
@@ -145,8 +145,9 @@ module SquashMatrix
     private
 
     def check_authentication
-      return unless @expires
-      setup_authentication && sleep(10) if @expires <= Time.now.utc
+      return unless @expires && @cookie_jar && @expires <= Time.now.utc
+      @cookie_jar = HTTP::CookieJar.new
+      setup_authentication && sleep(5)
     end
 
     def handle_http_request(uri, success_proc,

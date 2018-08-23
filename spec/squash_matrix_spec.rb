@@ -38,8 +38,8 @@ RSpec.describe SquashMatrix::Constants do
   end
 
   it 'expires from cookie regex' do
-    value = 'expires=Sat, 25-Aug-2018 00:00:00 GMT'
-    expect(Time.parse(SquashMatrix::Constants::EXPIRES_FROM_COOKIE_REGEX.match(value)[1])).to eq(Time.new(2018, 8, 25, 0, 0, 0, '+00:00'))
+    value = 'expires=Sat, 25-Aug-2018 00:00:00 UTC'
+    expect(Time.parse(SquashMatrix::Constants::EXPIRES_FROM_COOKIE_REGEX.match(value)[1])).to eq(Time.new(2018, 8, 25, 0, 0, 0, '+00:00').utc)
   end
 end
 
