@@ -48,13 +48,13 @@ module SquashMatrix
       @user_agent = user_agent || UserAgentRandomizer::UserAgent.fetch(type: 'desktop_browser').string
       @squash_matrix_home_uri = URI::HTTP.build(host: SquashMatrix::Constants::SQUASH_MATRIX_URL)
       @suppress_errors = suppress_errors
-      @timeout = timeout
+      @timeout = timeout&.to_i
       return unless [player || email, password].none?(&:nil?)
       @cookie_jar = HTTP::CookieJar.new
-      @player = player
+      @player = player&.to_i
       @email = email
       @password = password
-      @expires = expires && Time.parse(expires).utc
+      @expires = !expires.to_s.empty? && Time.parse(expires).utc
       if cookie && @expires > Time.now.utc
         cookie.split('; ').each do |v|
           @cookie_jar.parse(v, @squash_matrix_home_uri)
