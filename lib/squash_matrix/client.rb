@@ -70,7 +70,7 @@ module SquashMatrix
     # @return [Hash] hash object containing club information
 
     def get_club_info(id = nil)
-      return if id.nil?
+      return unless id.to_i.positive?
       uri = URI::HTTP.build(
         host: SquashMatrix::Constants::SQUASH_MATRIX_URL,
         path: SquashMatrix::Constants::CLUB_PATH.gsub(':id', id.to_s)
@@ -87,7 +87,7 @@ module SquashMatrix
     # @return [Array<Hash>] Array of player match results
 
     def get_player_results(id = nil)
-      return if id.nil?
+      return unless id.to_i.positive?
       uri = URI::HTTP.build(
         host: SquashMatrix::Constants::SQUASH_MATRIX_URL,
         path: SquashMatrix::Constants::PLAYER_RESULTS_PATH.gsub(':id', id.to_s),
@@ -105,7 +105,7 @@ module SquashMatrix
     # @return [Hash] hash object containing player information
 
     def get_player_info(id = nil)
-      return if id.nil?
+      return unless id.to_i.positive?
       uri = URI::HTTP.build(
         host: SquashMatrix::Constants::SQUASH_MATRIX_URL,
         path: SquashMatrix::Constants::PLAYER_HOME_PATH.gsub(':id', id.to_s)
@@ -124,7 +124,7 @@ module SquashMatrix
     def get_search_results(query = nil,
                            squash_only: false,
                            racquetball_only: false)
-      return if query.blank?
+      return if query.to_s.empty?
       uri = URI::HTTP.build(
         host: SquashMatrix::Constants::SQUASH_MATRIX_URL,
         path: SquashMatrix::Constants::SEARCH_RESULTS_PATH

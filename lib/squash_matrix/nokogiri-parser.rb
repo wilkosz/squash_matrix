@@ -6,7 +6,7 @@ require_relative 'constants'
 module SquashMatrix
   class NokogiriParser
     class << self
-      def get_player_rsults(body)
+      def get_player_results(body)
         rtn = Nokogiri::HTML(body)&.xpath('//table[@id="results"]//tbody//tr')&.map do |r|
           date = r.at_css('td[1]')&.content
           opponent_id = r.at_css('td[10]//a')&.attribute('href')&.content
@@ -122,7 +122,7 @@ module SquashMatrix
             name: tr.css('td[1]')&.text,
             club_name: tr.css('td[2]')&.text
           }
-          rtn[:id] = SquashMatrix::Constants::PLAYER_FROM_PATH_REGEX.match(id)[1].to_i if id.present?
+          rtn[:id] = SquashMatrix::Constants::PLAYER_FROM_PATH_REGEX.match(id)[1].to_i if id
           rtn[:rating] = rating.to_f if rating
           rtn
         end

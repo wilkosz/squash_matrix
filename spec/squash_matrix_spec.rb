@@ -68,11 +68,16 @@ RSpec.describe SquashMatrix::Client do
 
   it 'client returns joshua wilkosz player information' do
     c = SquashMatrix::Client.new
-    expect(c.get_player_info(42_547)).not_to be nil
+    expect(c.get_player_info(42547)).not_to be nil
   end
 
   it 'client returns melbourne university club information' do
     c = SquashMatrix::Client.new
     expect(c.get_club_info(336)).not_to be nil
+  end
+
+  it 'client performs search' do
+    c = SquashMatrix::Client.new
+    expect(c.get_search_results('joshua')).not_to be nil
   end
 end
