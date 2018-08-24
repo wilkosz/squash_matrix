@@ -220,8 +220,8 @@ module SquashMatrix
         @cookie_jar.parse(v, @squash_matrix_home_uri)
       end
       @expires ||= Time.now.utc + 60 * 60 * 24 * 2 # default expires in two days (usually 52 hours)
-      @player = SquashMatrix::Constants::PLAYER_FROM_PATH_REGEX.match(res[SquashMatrix::Constants::LOCATION_HEADER])[1] if @player.nil? && !res[SquashMatrix::Constants::LOCATION_HEADER].empty?
-      return unless !@suppress_errors && !@cookie_jar&.cookies(@squash_matrix_home_uri)&.find { |c| c.name == SquashMatrix::Constants::ASPXAUTH_COOKIE_NAME && !c.value.empty? }
+      @player = SquashMatrix::Constants::PLAYER_FROM_PATH_REGEX.match(res[SquashMatrix::Constants::LOCATION_HEADER])[1] if @player.nil? && !res[SquashMatrix::Constants::LOCATION_HEADER].to_s.empty?
+      return unless !@suppress_errors && !@cookie_jar&.cookies(@squash_matrix_home_uri)&.find { |c| c.name == SquashMatrix::Constants::ASPXAUTH_COOKIE_NAME && !c.value.to_s.empty? }
       error_string = SquashMatrix::NokogiriParser.get_log_on_error(res.body).join(', ')
       raise SquashMatrix::Errors::AuthorizationError, error_string
     end
