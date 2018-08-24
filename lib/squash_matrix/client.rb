@@ -48,7 +48,7 @@ module SquashMatrix
       @user_agent = user_agent || UserAgentRandomizer::UserAgent.fetch(type: 'desktop_browser').string
       @squash_matrix_home_uri = URI::HTTP.build(host: SquashMatrix::Constants::SQUASH_MATRIX_URL)
       @suppress_errors = suppress_errors
-      @timeout = timeout&.to_i
+      @timeout = timeout
       return unless [player || email, password].none?(&:nil?)
       @cookie_jar = HTTP::CookieJar.new
       @player = player&.to_i
@@ -145,7 +145,7 @@ module SquashMatrix
     private
 
     def check_authentication
-      return unless @expires && @cookie_jar && @expires <= Time.now.utc
+      return unless @expires && @cookie_jar && @expires <= (Time.now.utc + @timeout)
       @cookie_jar = HTTP::CookieJar.new
       setup_authentication && sleep(5)
     end

@@ -32,7 +32,9 @@ module SquashMatrix
       end
 
       def get_player_info(body)
-        rows = Nokogiri::HTML(body)&.xpath('//table[@id="profile"]//tbody//tr')
+        bc = Nokogiri::HTML(body)&.xpath('//div[@id="bodycontent"]')
+        name = bc.children[3].text
+        rows = bc.xpath('//div[@id="Summary"]//table[@id="profile"]//tbody//tr')
         rating = rows[1]&.css('td[2]')&.text
         clubs = rows[2]&.css('td[2]')&.css('ul//li')&.map do |c|
           id = c&.css('a')&.attribute('href')&.text
@@ -51,6 +53,7 @@ module SquashMatrix
           rtn
         end
         {
+          name: name,
           rating: rating,
           clubs: clubs,
           teams: teams

@@ -25,6 +25,7 @@ client = SquashMatrix::Client.new(player: 42547, password: "foo")# initialize cl
 => SquashMatrix::Client
 client.get_player_info(42547) # retrieve player info for joshua wilkosz #42547
 => {
+  :name =>"Joshua Wilkosz"
   :rating=>"250.202",
   :clubs=>[
     {
