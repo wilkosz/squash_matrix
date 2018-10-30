@@ -136,6 +136,13 @@ p => {
 }
 replica_client = SquashMatrix::Client.new(p)
 => SquashMatrix::Client
+# Don't want to use credentials, use a proxy instead
+client_behind_proxy = SquashMatrix::Client.new(proxy_addr: '78.186.111.109', proxy_port: 8080)
+begin
+  (100..1000).each { |i| client_behind_proxy.get_club_info(336) }
+rescue SquashMatrix::Errors::ForbiddenError => e
+  puts "Time to change proxy address!"
+end
 ```
 *Note: in previous example `client` and `replica_client` authentication will expire at `2018-08-25 17:05:04 UTC` and make separate calls for re-authentication and thereafter will have separate instance states*
 

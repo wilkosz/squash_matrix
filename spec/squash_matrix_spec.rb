@@ -80,4 +80,9 @@ RSpec.describe SquashMatrix::Client do
     c = SquashMatrix::Client.new
     expect(c.get_search_results('joshua')).not_to be nil
   end
+
+  it 'search behind proxy' do
+    c = SquashMatrix::Client.new(proxy_addr: '78.186.111.109', proxy_port: 8080)
+    expect(c.get_club_info(336)).not_to be nil
+  end
 end

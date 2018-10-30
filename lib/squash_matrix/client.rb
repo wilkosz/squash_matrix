@@ -28,7 +28,9 @@ module SquashMatrix
         timeout: @timeout,
         user_agent: @user_agent,
         cookie: get_cookie_string,
-        expires: @expires.to_s
+        expires: @expires.to_s,
+        proxy_addr: @proxy_addr,
+        proxy_port: @proxy_port
       }.delete_if { |_k, v| v.nil? }
     end
 
@@ -44,11 +46,15 @@ module SquashMatrix
                    timeout: 60,
                    user_agent: nil,
                    cookie: nil,
-                   expires: nil)
+                   expires: nil,
+                   proxy_addr: nil,
+                   proxy_port: nil)
       @user_agent = user_agent || UserAgentRandomizer::UserAgent.fetch(type: 'desktop_browser').string
       @squash_matrix_home_uri = URI::HTTP.build(host: SquashMatrix::Constants::SQUASH_MATRIX_URL)
       @suppress_errors = suppress_errors
       @timeout = timeout
+      @proxy_addr = proxy_addr
+      @proxy_port = proxy_port
       return unless [player || email, password].none?(&:nil?)
       @cookie_jar = HTTP::CookieJar.new
       @player = player&.to_i
@@ -170,7 +176,7 @@ module SquashMatrix
           set_headers(req, headers: headers)
           req.set_form(form_data, SquashMatrix::Constants::MULTIPART_FORM_DATA)
         end
-        res = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == 'https') { |http| http.request(req) }
+        res = Net::HTTP.new(uri.hostname, uri.port, @proxy_addr, @proxy_port&.to_i, use_ssl: uri.scheme == 'https').start { |http| http.request(req) }
         case res
         when Net::HTTPSuccess, Net::HTTPFound
           return success_proc&.call(res) || res
