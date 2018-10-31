@@ -176,7 +176,7 @@ module SquashMatrix
           set_headers(req, headers: headers)
           req.set_form(form_data, SquashMatrix::Constants::MULTIPART_FORM_DATA)
         end
-        res = Net::HTTP.new(uri.hostname, uri.port, @proxy_addr, @proxy_port&.to_i, use_ssl: uri.scheme == 'https').start { |http| http.request(req) }
+        res = Net::HTTP.start(uri.hostname, uri.port, @proxy_addr, @proxy_port&.to_i, use_ssl: uri.scheme == 'https') { |http| http.request(req) }
         case res
         when Net::HTTPSuccess, Net::HTTPFound
           return success_proc&.call(res) || res
