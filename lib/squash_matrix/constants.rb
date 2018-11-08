@@ -36,5 +36,6 @@ module SquashMatrix
 
     TOO_MANY_REQUESTS_ERROR_REGEX = /Request made too soon. This is to prevent abuse to the site. We apologise for the inconvenience/
     FORBIDDEN_ERROR_REGEX = /Forbidden/
+    NOT_FOUND_REGEX = /No information/
   end
 end

@@ -186,12 +186,18 @@ module SquashMatrix
         res = @request_client.start(uri.hostname, uri.port, use_ssl: uri.scheme == 'https') { |http| http.request(req) }
         case res
         when Net::HTTPSuccess, Net::HTTPFound
-          return success_proc&.call(res) || res
+          rtn = success_proc&.call(res) || res
+          raise SquashMatrix::Errors::EntityNotFoundError if rtn.is_a?(Array) &&
+            rtn.length == 0 &&
+            SquashMatrix::Constants::NOT_FOUND_REGEX.match(res.body)
+          return rtn
         when Net::HTTPConflict
           unless @suppress_errors
             raise SquashMatrix::Errors::ForbiddenError, res.body if SquashMatrix::Constants::FORBIDDEN_ERROR_REGEX.match(res.body)
             raise SquashMatrix::Errors::TooManyRequestsError, res.body if SquashMatrix::Constants::TOO_MANY_REQUESTS_ERROR_REGEX.match(res.body)
           end
+        when Net::HTTPNotFound
+          raise SquashMatrix::Errors::EntityNotFoundError
         else
           raise SquashMatrix::Errors::UnknownError, res unless @suppress_errors
         end
