@@ -47,14 +47,21 @@ module SquashMatrix
                    user_agent: nil,
                    cookie: nil,
                    expires: nil,
+                   proxy_port: nil,
                    proxy_addr: nil,
-                   proxy_port: nil)
+                   proxy_user: nil,
+                   proxy_pass: nil,
+                   proxy_custom_headers: nil)
       @user_agent = user_agent || UserAgentRandomizer::UserAgent.fetch(type: 'desktop_browser').string
       @squash_matrix_home_uri = URI::HTTP.build(host: SquashMatrix::Constants::SQUASH_MATRIX_URL)
       @suppress_errors = suppress_errors
       @timeout = timeout
-      @proxy_addr = proxy_addr
       @proxy_port = proxy_port
+      @proxy_addr = proxy_addr
+      @proxy_user = proxy_user
+      @proxy_pass = proxy_pass
+      @proxy_custom_headers = proxy_custom_headers
+      @request_client = @proxy_addr.nil? ? Net::HTTP::Proxy(@proxy_addr, @proxy_port&.to_i, @proxy_user, @proxy_pass) : Net::HTTP
       return unless [player || email, password].none?(&:nil?)
       @cookie_jar = HTTP::CookieJar.new
       @player = player&.to_i
@@ -176,7 +183,7 @@ module SquashMatrix
           set_headers(req, headers: headers)
           req.set_form(form_data, SquashMatrix::Constants::MULTIPART_FORM_DATA)
         end
-        res = Net::HTTP.new(uri.hostname, uri.port, @proxy_addr, @proxy_port&.to_i, use_ssl: uri.scheme == 'https').start { |http| http.request(req) }
+        res = @request_client.start(uri.hostname, uri.port, use_ssl: uri.scheme == 'https') { |http| http.request(req) }
         case res
         when Net::HTTPSuccess, Net::HTTPFound
           return success_proc&.call(res) || res
@@ -240,6 +247,7 @@ module SquashMatrix
       }
       headers_to_add = headers_to_add.merge(headers) if headers
       headers_to_add = headers_to_add.merge(SquashMatrix::Constants::COOKIE_HEADER => get_cookie_string) if @cookie_jar
+      headers_to_add = headers_to_add.merge(@proxy_custom_headers) if @proxy_custom_headers
       headers_to_add.each { |key, val| req[key.to_s] = val }
     end
 

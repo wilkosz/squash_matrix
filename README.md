@@ -137,7 +137,9 @@ p => {
 replica_client = SquashMatrix::Client.new(p)
 => SquashMatrix::Client
 # Don't want to use credentials, use a proxy instead
-client_behind_proxy = SquashMatrix::Client.new(proxy_addr: '78.186.111.109', proxy_port: 8080)
+proxy_addr = '78.186.111.109'
+proxy_port =  8080
+client_behind_proxy = SquashMatrix::Client.new(proxy_addr: proxy_addr, proxy_port: proxy_port, proxy_custom_headers: {'X-Forwarded-For': proxy_addr}) # squash matrix tracks the X-Forwarded-For header, also depending on the proxy service you are using you may need to overwrite header params
 begin
   (100..1000).each { |i| client_behind_proxy.get_club_info(336) }
 rescue SquashMatrix::Errors::ForbiddenError => e

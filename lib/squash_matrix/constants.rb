@@ -15,6 +15,7 @@ module SquashMatrix
     X_WWW__FROM_URL_ENCODED = 'application/x-www-form-urlencoded'
     MULTIPART_FORM_DATA = 'multipart/form-data'
     CONTENT_TYPE_HEADER = 'content-type'
+    X_FORWARDED_FOR_HEADER = 'X-Forwarded-For'
     REFERER = 'Home/Player/:id'
     ASPXAUTH_COOKIE_NAME = '.ASPXAUTH'
     ASP_NET_SESSION_ID_COOKIE_NAME = 'ASP.NET_SessionId'
